@@ -1,0 +1,15 @@
+{
+  "parent": "forge:item/default",
+  "base": {
+    "parent": "minecraft:item/coal"
+  },
+  "loader": "forge:separate-perspective",
+  "perspectives": {
+    "firstperson_lefthand": {
+      "parent": "minecraft:item/bone"
+    },
+    "gui": {
+      "parent": "minecraft:item/snowball"
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "key": {
+    "#": {
+      "type": "forge:difference",
+      "base": {
+        "tag": "minecraft:fences"
+      },
+      "subtracted": {
+        "tag": "minecraft:non_flammable_wood"
+      }
+    }
+  },
+  "pattern": [
+    " # ",
+    "###",
+    " # "
+  ],
+  "result": {
+    "item": "minecraft:flint_and_steel"
+  }
+}

@@ -1,0 +1,266 @@
+plugins {
+    id 'java'
+    id 'java-library'
+    id 'eclipse'
+    id 'checkstyle'
+    id 'org.cadixdev.licenser'
+    id 'com.github.ben-manes.versions'
+    id 'org.javamodularity.moduleplugin' version '1.8.3' apply false
+}
+apply plugin: 'java-library'
+apply plugin: 'eclipse'
+apply plugin: 'checkstyle'
+apply plugin: 'jacoco'
+apply plugin: 'org.javamodularity.moduleplugin'
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    gradlePluginPortal()
+    maven {
+        name = 'forge'
+        url = 'https://maven.minecraftforge.net/'
+    }
+    maven {
+        name = 'Fabric'
+        url = 'https://maven.fabricmc.net/'
+    }
+    maven {
+        name = 'minecraft'
+        url = 'https://libraries.minecraft.net/'
+    }
+}
+
+/*// Fetch build number from Jenkins
+def ENV = System.getenv()
+
+allprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'eclipse'
+    apply plugin: 'checkstyle'
+
+    def constantsSource = rootProject.file("src/main/java/net/fabricmc/loader/impl/FabricLoaderImpl.java").text
+    version = (constantsSource =~ /\s+VERSION\s*=\s*"(.*)";/)[0][1] + (ENV.GITHUB_ACTIONS ? "" : "+local")
+
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven {
+            name = 'forge'
+            url = 'https://maven.minecraftforge.net/'
+        }
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        maven {
+            name = 'minecraft'
+            url = 'https://libraries.minecraft.net/'
+        }
+    }
+}
+
+sourceSets {
+    main {
+        java.srcDirs = ['src/main/java', 'src/main/legacyJava']
+    }
+}*/
+
+dependencyUpdates.rejectVersionIf { isNonStable(it.candidate.version) }
+configurations.forEach{ it.transitive = false }
+
+dependencies {
+    compileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
+
+    api("org.ow2.asm:asm:${ASM_VERSION}")
+    api("org.ow2.asm:asm-analysis:${ASM_VERSION}")
+    api("org.ow2.asm:asm-commons:${ASM_VERSION}")
+    api("org.ow2.asm:asm-tree:${ASM_VERSION}")
+    api("org.ow2.asm:asm-util:${ASM_VERSION}")
+
+//    api("org.spongepowered:mixin:${MIXIN_VERSION}") {
+    api("net.fabricmc:sponge-mixin:${MIXIN_VERSION}") {
+        exclude module: 'launchwrapper'
+        exclude module: 'guava'
+    }
+    api("net.fabricmc:tiny-mappings-parser:0.3.0+build.17")
+    api("net.fabricmc:tiny-remapper:0.8.2")
+    api("net.fabricmc:access-widener:2.1.0")
+
+    api('org.ow2.sat4j:org.ow2.sat4j.core:2.3.6')
+    api('org.ow2.sat4j:org.ow2.sat4j.pb:2.3.6')
+
+    api("net.minecraftforge:forgespi:${SPI_VERSION}")
+    api("org.apache.logging.log4j:log4j-api:${LOG4J_VERSION}")
+    api("org.slf4j:slf4j-api:${SLF4J_API_VERSION}")
+    api("com.google.guava:guava:${GUAVA_VERSION}")
+    api("com.google.code.gson:gson:${GSON_VERSION}")
+    api("org.apache.maven:maven-artifact:${APACHE_MAVEN_ARTIFACT_VERSION}")
+    api("org.apache.commons:commons-lang3:${APACHE_COMMONS_LANG3_VERSION}")
+    api("com.electronwill.night-config:core:${NIGHTCONFIG_VERSION}")
+    api("com.electronwill.night-config:toml:${NIGHTCONFIG_VERSION}")
+    api("cpw.mods:modlauncher:${MODLAUNCHER_VERSION}")
+    api("net.minecraftforge:coremods:${COREMODS_VERSION}")
+    api("com.mojang:logging:${MOJANG_LOGGING_VERSION}")
+    api "net.minecraftforge:JarJar:${JARJAR_VERSION}"
+
+    implementation("net.sf.jopt-simple:jopt-simple:${JOPT_SIMPLE_VERSION}")
+    implementation("cpw.mods:securejarhandler:${SECUREJARHANDLER_VERSION}")
+    implementation("net.minecraftforge:accesstransformers:${ACCESSTRANSFORMERS_VERSION}")
+    implementation("net.minecrell:terminalconsoleappender:${TERMINALCONSOLEAPPENDER_VERSION}")
+    // implementation("org.jline:jline:${JLINE_VERSION}")
+
+    implementation("org.apache.logging.log4j:log4j-core:${LOG4J_VERSION}")
+    annotationProcessor("org.apache.logging.log4j:log4j-core:${LOG4J_VERSION}")
+
+    testCompileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
+    testRuntimeOnly("cpw.mods:bootstraplauncher:${BOOTSTRAPLAUNCHER_VERSION}")
+
+    // Unit testing for mod metadata
+    testImplementation('org.junit.jupiter:junit-jupiter:5.8.2')
+}
+
+task sourcesJar(type: Jar) {
+    archiveClassifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+ext {
+    MANIFESTS = [
+        '/': [
+            'Timestamp': new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
+            'Git-Commit': GIT_INFO.abbreviatedId,
+            'Git-Branch': GIT_INFO.branch,
+            'Build-Number': "${System.getenv('BUILD_NUMBER')?:0}",
+        ] as LinkedHashMap,
+        'net/minecraftforge/fml/loading/': [
+            'Specification-Title':      'FMLLoader',
+            'Specification-Vendor':     'Forge Development LLC',
+            'Specification-Version':    '1',
+            'Implementation-Title':     'FML Loader',
+            'Implementation-Version':   '1.0',
+            'Implementation-Vendor':    'Forge'
+        ] as LinkedHashMap
+    ]
+}
+
+jar.doFirst {
+    MANIFESTS.each { pkg, values ->
+        manifest.attributes(values, pkg)
+    }
+}
+
+/*java {
+    withSourcesJar()
+}
+
+jar {
+    enabled = false
+    // Set the classifier to fix gradle task validation confusion.
+    archiveClassifier = "disabled"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+// useful for creating test mod jar
+task testJar(type: Jar) {
+    archiveClassifier = "test"
+    from sourceSets.test.output
+}
+
+task copyJson() {
+    def inJson = file('src/main/resources/fabric-installer.json')
+    def inLwJson = file('src/main/resources/fabric-installer.launchwrapper.json')
+
+    def outJson = file("build/libs/${archivesBaseName}-${version}.json")
+    def outLwJson = file("build/libs/${archivesBaseName}-${version}.launchwrapper.json")
+
+    inputs.files (inJson, inLwJson)
+    outputs.files(outJson, outLwJson)
+
+    doLast {
+        outJson.text = inJson.text
+        outLwJson.text = inLwJson.text
+    }
+}
+
+tasks.build.dependsOn "copyJson"*/
+
+tasks.withType(JavaCompile) {
+    options.compilerArgs << '-Xlint:unchecked'
+}
+
+javadoc {
+    options {
+        if (file("README.html").exists()) {
+            overview = "README.html"
+        }
+        source = "8"
+        encoding = 'UTF-8'
+        charSet = 'UTF-8'
+        memberLevel = JavadocMemberLevel.PACKAGE
+        links(
+                'https://asm.ow2.io/javadoc/',
+                'https://docs.oracle.com/javase/8/docs/api/',
+                'https://logging.apache.org/log4j/2.x/log4j-api/apidocs/'
+        )
+        // Disable the crazy super-strict doclint tool in Java 8
+        addStringOption('Xdoclint:none', '-quiet')
+    }
+    source sourceSets.main.allJava.srcDirs
+    classpath = sourceSets.main.compileClasspath + sourceSets.main.output // compile impl stuff for dep as well
+    include("**/api/**")
+    // workaround as one of the api stuff use that package
+    failOnError false
+}
+
+task javadocJar(type: Jar) {
+    dependsOn javadoc
+    from javadoc.destinationDir
+    archiveClassifier = 'javadoc'
+}
+
+build.dependsOn javadocJar
+
+allprojects {
+    checkstyle {
+        configFile = project.rootProject.file("checkstyle.xml")
+        toolVersion = '8.44'
+    }
+
+    license {
+        header project.rootProject.file("HEADER")
+        include '**/*.java'
+
+        // Exclude gson since it is google's code, we just modify and bundle it
+        exclude '**/lib/gson/*.java'
+    }
+}
+
+// Causes more trouble than its worth
+tasks.withType(GenerateModuleMetadata) {
+    enabled = false
+}
+
+license {
+    header = rootProject.file('LICENSE-header.txt')
+
+    include 'net/minecraftforge/'
+}
+
+artifacts {
+    archives jar
+    archives sourcesJar
+}
+
+publishing.publications.mavenJava(MavenPublication) {
+    from components.java
+    artifact sourcesJar
+}

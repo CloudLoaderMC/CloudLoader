@@ -1,0 +1,48 @@
+{
+  "type": "forge:conditional",
+  "recipes": [
+    {
+      "conditions": [
+        {
+          "type": "forge:not",
+          "value": {
+            "type": "forge:and",
+            "values": [
+              {
+                "type": "forge:not",
+                "value": {
+                  "type": "forge:mod_loaded",
+                  "modid": "minecraft"
+                }
+              },
+              {
+                "type": "forge:item_exists",
+                "item": "minecraft:dirt"
+              },
+              {
+                "type": "forge:false"
+              }
+            ]
+          }
+        }
+      ],
+      "recipe": {
+        "type": "minecraft:crafting_shaped",
+        "key": {
+          "X": {
+            "item": "minecraft:dirt"
+          }
+        },
+        "pattern": [
+          "XXX",
+          "XXX",
+          "XXX"
+        ],
+        "result": {
+          "count": 64,
+          "item": "minecraft:diamond_block"
+        }
+      }
+    }
+  ]
+}
