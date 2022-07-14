@@ -77,7 +77,7 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
         return levelTranslationKeys.get(path);
     }
 
-    public void setConfig(CommentedConfig config) {
+    public void setConfig(Config config) {
         this.childConfig = config;
         if (config != null && !isCorrect(config)) {
             String configName = config instanceof FileConfig ? ((FileConfig) config).getNioPath().toString() : config.toString();
@@ -96,7 +96,7 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
     }
 
     @Override
-    public void acceptConfig(final CommentedConfig data) {
+    public void acceptConfig(final Config data) {
         setConfig(data);
     }
 
@@ -140,20 +140,20 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
         }
     }
 
-    public synchronized boolean isCorrect(CommentedConfig config) {
+    public synchronized boolean isCorrect(Config config) {
         LinkedList<String> parentPath = new LinkedList<>();
         return correct(this.config, config, parentPath, Collections.unmodifiableList( parentPath ), (a, b, c, d) -> {}, null, true) == 0;
     }
 
-    public int correct(CommentedConfig config) {
+    public int correct(Config config) {
         return correct(config, (action, path, incorrectValue, correctedValue) -> {}, null);
     }
 
-    public synchronized int correct(CommentedConfig config, CorrectionListener listener) {
+    public synchronized int correct(Config config, CorrectionListener listener) {
         return correct(config, listener, null);
     }
 
-    public synchronized int correct(CommentedConfig config, CorrectionListener listener, CorrectionListener commentListener) {
+    public synchronized int correct(Config config, CorrectionListener listener, CorrectionListener commentListener) {
         LinkedList<String> parentPath = new LinkedList<>(); //Linked list for fast add/removes
         int ret = -1;
         try {
@@ -165,7 +165,7 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
         return ret;
     }
 
-    private int correct(UnmodifiableConfig spec, CommentedConfig config, LinkedList<String> parentPath, List<String> parentPathUnmodifiable, CorrectionListener listener, CorrectionListener commentListener, boolean dryRun)
+    private int correct(UnmodifiableConfig spec, Config config, LinkedList<String> parentPath, List<String> parentPathUnmodifiable, CorrectionListener listener, CorrectionListener commentListener, boolean dryRun)
     {
         int count = 0;
 
@@ -195,24 +195,25 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
                 }
                 else
                 {
-                    CommentedConfig newValue = config.createSubConfig();
+                    Config newValue = config.createSubConfig();
                     configMap.put(key, newValue);
                     listener.onCorrect(action, parentPathUnmodifiable, configValue, newValue);
                     count++;
                     count += correct((Config)specValue, newValue, parentPath, parentPathUnmodifiable, listener, commentListener, dryRun);
                 }
 
-                String newComment = levelComments.get(parentPath);
-                String oldComment = config.getComment(key);
-                if (!stringsMatchIgnoringNewlines(oldComment, newComment))
-                {
-                    if(commentListener != null)
-                        commentListener.onCorrect(action, parentPathUnmodifiable, oldComment, newComment);
+                if (config instanceof CommentedConfig) {
+                    String newComment = levelComments.get(parentPath);
+                    String oldComment = ((CommentedConfig) config).getComment(key);
+                    if (!stringsMatchIgnoringNewlines(oldComment, newComment)) {
+                        if (commentListener != null)
+                            commentListener.onCorrect(action, parentPathUnmodifiable, oldComment, newComment);
 
-                    if (dryRun)
-                        return 1;
+                        if (dryRun)
+                            return 1;
 
-                    config.setComment(key, newComment);
+                        ((CommentedConfig) config).setComment(key, newComment);
+                    }
                 }
             }
             else
@@ -228,16 +229,17 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
                     listener.onCorrect(action, parentPathUnmodifiable, configValue, newValue);
                     count++;
                 }
-                String oldComment = config.getComment(key);
-                if (!stringsMatchIgnoringNewlines(oldComment, valueSpec.getComment()))
-                {
-                    if (commentListener != null)
-                        commentListener.onCorrect(action, parentPathUnmodifiable, oldComment, valueSpec.getComment());
+                if (config instanceof CommentedConfig) {
+                    String oldComment = ((CommentedConfig) config).getComment(key);
+                    if (!stringsMatchIgnoringNewlines(oldComment, valueSpec.getComment())) {
+                        if (commentListener != null)
+                            commentListener.onCorrect(action, parentPathUnmodifiable, oldComment, valueSpec.getComment());
 
-                    if (dryRun)
-                        return 1;
+                        if (dryRun)
+                            return 1;
 
-                    config.setComment(key, valueSpec.getComment());
+                        ((CommentedConfig) config).setComment(key, valueSpec.getComment());
+                    }
                 }
             }
 

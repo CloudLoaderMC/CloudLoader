@@ -51,7 +51,7 @@ tasks.withType(JavaCompile) {
 }
 
 license {
-    header = rootProject.file('LICENSE-header.txt')
+    header = rootProject.file('LICENSES/Forge-header.txt')
     include 'net/minecraftforge/'
 }
 

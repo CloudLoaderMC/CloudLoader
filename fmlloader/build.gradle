@@ -18,6 +18,10 @@ repositories {
     mavenCentral()
     gradlePluginPortal()
     maven {
+        name = 'Cloud'
+        url = 'https://maven.cloudmc.ml/releases/'
+    }
+    maven {
         name = 'forge'
         url = 'https://maven.minecraftforge.net/'
     }
@@ -45,6 +49,10 @@ allprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven {
+            name = 'Cloud'
+            url = 'https://maven.cloudmc.ml/releases/'
+        }
         maven {
             name = 'forge'
             url = 'https://maven.minecraftforge.net/'
@@ -78,8 +86,7 @@ dependencies {
     api("org.ow2.asm:asm-tree:${ASM_VERSION}")
     api("org.ow2.asm:asm-util:${ASM_VERSION}")
 
-//    api("org.spongepowered:mixin:${MIXIN_VERSION}") {
-    api("net.fabricmc:sponge-mixin:${MIXIN_VERSION}") {
+    api("ml.cloudmc:sponge-mixin:${MIXIN_VERSION}") {
         exclude module: 'launchwrapper'
         exclude module: 'guava'
     }
@@ -90,7 +97,7 @@ dependencies {
     api('org.ow2.sat4j:org.ow2.sat4j.core:2.3.6')
     api('org.ow2.sat4j:org.ow2.sat4j.pb:2.3.6')
 
-    api("net.minecraftforge:forgespi:${SPI_VERSION}")
+    api("ml.cloudmc:CloudSPI:${SPI_VERSION}")
     api("org.apache.logging.log4j:log4j-api:${LOG4J_VERSION}")
     api("org.slf4j:slf4j-api:${SLF4J_API_VERSION}")
     api("com.google.guava:guava:${GUAVA_VERSION}")
@@ -99,8 +106,9 @@ dependencies {
     api("org.apache.commons:commons-lang3:${APACHE_COMMONS_LANG3_VERSION}")
     api("com.electronwill.night-config:core:${NIGHTCONFIG_VERSION}")
     api("com.electronwill.night-config:toml:${NIGHTCONFIG_VERSION}")
+    api("com.electronwill.night-config:json:${NIGHTCONFIG_VERSION}")
     api("cpw.mods:modlauncher:${MODLAUNCHER_VERSION}")
-    api("net.minecraftforge:coremods:${COREMODS_VERSION}")
+    api("ml.cloudmc:CoreMods:${COREMODS_VERSION}")
     api("com.mojang:logging:${MOJANG_LOGGING_VERSION}")
     api "net.minecraftforge:JarJar:${JARJAR_VERSION}"
 
@@ -230,13 +238,17 @@ task javadocJar(type: Jar) {
 build.dependsOn javadocJar
 
 allprojects {
+    repositories {
+        maven { url "https://maven.cloudmc.ml/releases/" }
+    }
+
     checkstyle {
         configFile = project.rootProject.file("checkstyle.xml")
         toolVersion = '8.44'
     }
 
     license {
-        header project.rootProject.file("HEADER")
+        header project.rootProject.file("LICENSE-header.txt")
         include '**/*.java'
 
         // Exclude gson since it is google's code, we just modify and bundle it

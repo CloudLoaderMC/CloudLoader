@@ -167,54 +167,54 @@ public class DataGeneratorTest
             ResourceLocation ID = new ResourceLocation("data_gen_test", "conditional");
 
             ConditionalRecipe.builder()
-            .addCondition(
-                and(
-                    not(modLoaded("minecraft")),
-                    itemExists("minecraft", "dirt"),
-                    FALSE()
-                )
-            )
-            .addRecipe(
-                ShapedRecipeBuilder.shaped(Blocks.DIAMOND_BLOCK, 64)
-                .pattern("XXX")
-                .pattern("XXX")
-                .pattern("XXX")
-                .define('X', Blocks.DIRT)
-                .group("")
-                .unlockedBy("has_dirt", has(Blocks.DIRT)) // DUMMY: Necessary, but not used when a custom advancement is provided through setAdvancement
-                ::save
-            )
-            .setAdvancement(ID,
-                ConditionalAdvancement.builder()
-                .addCondition(
-                    and(
-                        not(modLoaded("minecraft")),
-                        itemExists("minecraft", "dirt"),
-                        FALSE()
+                    .addCondition(
+                            and(
+                                    not(modLoaded("minecraft")),
+                                    itemExists("minecraft", "dirt"),
+                                    FALSE()
+                            )
                     )
-                )
-                .addAdvancement(
-                    Advancement.Builder.advancement()
-                    .parent(new ResourceLocation("minecraft", "root"))
-                    .display(Blocks.DIAMOND_BLOCK,
-                        Component.literal("Dirt2Diamonds"),
-                        Component.literal("The BEST crafting recipe in the game!"),
-                        null, FrameType.TASK, false, false, false
+                    .addRecipe(
+                            ShapedRecipeBuilder.shaped(Blocks.DIAMOND_BLOCK, 64)
+                                    .pattern("XXX")
+                                    .pattern("XXX")
+                                    .pattern("XXX")
+                                    .define('X', Blocks.DIRT)
+                                    .group("")
+                                    .unlockedBy("has_dirt", has(Blocks.DIRT)) // DUMMY: Necessary, but not used when a custom advancement is provided through setAdvancement
+                                    ::save
                     )
-                    .rewards(AdvancementRewards.Builder.recipe(ID))
-                    .addCriterion("has_dirt", has(Blocks.DIRT))
-                )
-            )
-            .build(consumer, ID);
+                    .setAdvancement(ID,
+                            ConditionalAdvancement.builder()
+                                    .addCondition(
+                                            and(
+                                                    not(modLoaded("minecraft")),
+                                                    itemExists("minecraft", "dirt"),
+                                                    FALSE()
+                                            )
+                                    )
+                                    .addAdvancement(
+                                            Advancement.Builder.advancement()
+                                                    .parent(new ResourceLocation("minecraft", "root"))
+                                                    .display(Blocks.DIAMOND_BLOCK,
+                                                            Component.literal("Dirt2Diamonds"),
+                                                            Component.literal("The BEST crafting recipe in the game!"),
+                                                            null, FrameType.TASK, false, false, false
+                                                    )
+                                                    .rewards(AdvancementRewards.Builder.recipe(ID))
+                                                    .addCriterion("has_dirt", has(Blocks.DIRT))
+                                    )
+                    )
+                    .build(consumer, ID);
 
             ConditionalRecipe.builder()
                     .addCondition(
                             not(
-                                and(
-                                        not(modLoaded("minecraft")),
-                                        itemExists("minecraft", "dirt"),
-                                        FALSE()
-                                )
+                                    and(
+                                            not(modLoaded("minecraft")),
+                                            itemExists("minecraft", "dirt"),
+                                            FALSE()
+                                    )
                             )
                     )
                     .addRecipe(
@@ -263,40 +263,40 @@ public class DataGeneratorTest
             // ingredient tests
             // strict NBT match - should match an unnamed iron pickaxe that lost 3 durability
             Ingredient nbtIngredient = NBTIngredient.of(Util.make(() ->
-                {
-                    ItemStack stack = new ItemStack(Items.IRON_PICKAXE);
-                    stack.setDamageValue(3);
-                    return stack;
-                }));
+            {
+                ItemStack stack = new ItemStack(Items.IRON_PICKAXE);
+                stack.setDamageValue(3);
+                return stack;
+            }));
             ShapelessRecipeBuilder.shapeless(Items.GOLDEN_PICKAXE)
-                                  .requires(nbtIngredient)
-                                  .unlockedBy("has_pickaxe", has(Items.IRON_PICKAXE))
-                                  .save(consumer, new ResourceLocation("data_gen_test", "exact_nbt_ingredient"));
+                    .requires(nbtIngredient)
+                    .unlockedBy("has_pickaxe", has(Items.IRON_PICKAXE))
+                    .save(consumer, new ResourceLocation("data_gen_test", "exact_nbt_ingredient"));
 
             // ingredient tests
             // contains NBT match - should match a stone pickaxe that lost 3 durability, regardless of setting its name
             ShapelessRecipeBuilder.shapeless(Items.IRON_PICKAXE)
-                                  .requires(PartialNBTIngredient.of(Items.STONE_PICKAXE, Util.make(() ->
-                                      {
-                                        CompoundTag nbt = new CompoundTag();
-                                        nbt.putInt(ItemStack.TAG_DAMAGE, 3);
-                                        return nbt;
-                                      })))
-                                  .unlockedBy("has_pickaxe", has(Items.STONE_PICKAXE))
-                                  .save(consumer, new ResourceLocation("data_gen_test", "contains_nbt_ingredient_single_item"));
+                    .requires(PartialNBTIngredient.of(Items.STONE_PICKAXE, Util.make(() ->
+                    {
+                        CompoundTag nbt = new CompoundTag();
+                        nbt.putInt(ItemStack.TAG_DAMAGE, 3);
+                        return nbt;
+                    })))
+                    .unlockedBy("has_pickaxe", has(Items.STONE_PICKAXE))
+                    .save(consumer, new ResourceLocation("data_gen_test", "contains_nbt_ingredient_single_item"));
 
             // contains NBT match - should match a wood, stone, or iron pickaxe that was named "Diamond Pickaxe", regardless of damage
             ShapelessRecipeBuilder.shapeless(Items.DIAMOND_PICKAXE)
-                                  .requires(PartialNBTIngredient.of(Util.make(() ->
-                                      {
-                                          CompoundTag nbt = new CompoundTag();
-                                          CompoundTag display = new CompoundTag();
-                                          display.putString(ItemStack.TAG_DISPLAY_NAME, "{\"text\":\"Diamond Pickaxe\"}");
-                                          nbt.put(ItemStack.TAG_DISPLAY, display);
-                                          return nbt;
-                                      }), Items.WOODEN_PICKAXE, Items.STONE_PICKAXE, Items.IRON_PICKAXE))
-                                  .unlockedBy("has_pickaxe", has(Items.WOODEN_PICKAXE))
-                                  .save(consumer, new ResourceLocation("data_gen_test", "contains_nbt_ingredient_item_set"));
+                    .requires(PartialNBTIngredient.of(Util.make(() ->
+                    {
+                        CompoundTag nbt = new CompoundTag();
+                        CompoundTag display = new CompoundTag();
+                        display.putString(ItemStack.TAG_DISPLAY_NAME, "{\"text\":\"Diamond Pickaxe\"}");
+                        nbt.put(ItemStack.TAG_DISPLAY, display);
+                        return nbt;
+                    }), Items.WOODEN_PICKAXE, Items.STONE_PICKAXE, Items.IRON_PICKAXE))
+                    .unlockedBy("has_pickaxe", has(Items.WOODEN_PICKAXE))
+                    .save(consumer, new ResourceLocation("data_gen_test", "contains_nbt_ingredient_item_set"));
 
             // intersection - should match all non-flammable planks
             ShapedRecipeBuilder.shaped(Blocks.NETHERRACK)
@@ -309,28 +309,28 @@ public class DataGeneratorTest
 
             // difference - should match all flammable fences
             ShapedRecipeBuilder.shaped(Items.FLINT_AND_STEEL)
-                               .pattern(" # ")
-                               .pattern("###")
-                               .pattern(" # ")
-                               .define('#', DifferenceIngredient.of(Ingredient.of(ItemTags.FENCES), Ingredient.of(ItemTags.NON_FLAMMABLE_WOOD)))
-                               .unlockedBy("has_fence", has(Items.CRIMSON_FENCE))
-                               .save(consumer, new ResourceLocation("data_gen_test", "difference_ingredient"));
+                    .pattern(" # ")
+                    .pattern("###")
+                    .pattern(" # ")
+                    .define('#', DifferenceIngredient.of(Ingredient.of(ItemTags.FENCES), Ingredient.of(ItemTags.NON_FLAMMABLE_WOOD)))
+                    .unlockedBy("has_fence", has(Items.CRIMSON_FENCE))
+                    .save(consumer, new ResourceLocation("data_gen_test", "difference_ingredient"));
 
             // compound - should match planks, logs, or bedrock
             ShapedRecipeBuilder.shaped(Blocks.DIRT)
-                               .pattern("###")
-                               .pattern(" # ")
-                               .define('#', CompoundIngredient.of(Ingredient.of(ItemTags.PLANKS), Ingredient.of(ItemTags.LOGS), Ingredient.of(Blocks.BEDROCK)))
-                               .unlockedBy("has_planks", has(Items.CRIMSON_PLANKS))
-                               .save(consumer, new ResourceLocation("data_gen_test", "compound_ingredient_only_vanilla"));
+                    .pattern("###")
+                    .pattern(" # ")
+                    .define('#', CompoundIngredient.of(Ingredient.of(ItemTags.PLANKS), Ingredient.of(ItemTags.LOGS), Ingredient.of(Blocks.BEDROCK)))
+                    .unlockedBy("has_planks", has(Items.CRIMSON_PLANKS))
+                    .save(consumer, new ResourceLocation("data_gen_test", "compound_ingredient_only_vanilla"));
 
             // compound - should match planks, logs, or a stone pickaxe with 3 damage
             ShapedRecipeBuilder.shaped(Blocks.GOLD_BLOCK)
-                               .pattern("#")
-                               .pattern("#")
-                               .define('#', CompoundIngredient.of(Ingredient.of(ItemTags.PLANKS), Ingredient.of(ItemTags.LOGS), nbtIngredient))
-                               .unlockedBy("has_planks", has(Items.CRIMSON_PLANKS))
-                               .save(consumer, new ResourceLocation("data_gen_test", "compound_ingredient_custom_types"));
+                    .pattern("#")
+                    .pattern("#")
+                    .define('#', CompoundIngredient.of(Ingredient.of(ItemTags.PLANKS), Ingredient.of(ItemTags.LOGS), nbtIngredient))
+                    .unlockedBy("has_planks", has(Items.CRIMSON_PLANKS))
+                    .save(consumer, new ResourceLocation("data_gen_test", "compound_ingredient_custom_types"));
         }
     }
 
@@ -566,11 +566,11 @@ public class DataGeneratorTest
         protected void addTags()
         {
             tag(BlockTags.create(new ResourceLocation(MODID, "test")))
-                .add(Blocks.DIAMOND_BLOCK)
-                .addTag(BlockTags.STONE_BRICKS)
-                .addTag(net.minecraftforge.common.Tags.Blocks.COBBLESTONE)
-                .addOptional(new ResourceLocation("chisel", "marble/raw"))
-                .addOptionalTag(new ResourceLocation("forge", "storage_blocks/ruby"));
+                    .add(Blocks.DIAMOND_BLOCK)
+                    .addTag(BlockTags.STONE_BRICKS)
+                    .addTag(net.minecraftforge.common.Tags.Blocks.COBBLESTONE)
+                    .addOptional(new ResourceLocation("chisel", "marble/raw"))
+                    .addOptionalTag(new ResourceLocation("forge", "storage_blocks/ruby"));
 
             // Hopefully sorting issues
             tag(BlockTags.create(new ResourceLocation(MODID, "thing/one")))
@@ -652,7 +652,7 @@ public class DataGeneratorTest
 
         private static final Set<String> IGNORED_MODELS = ImmutableSet.of("test_generated_model", "test_block_model",
                 "fishing_rod", "fishing_rod_cast" // Vanilla doesn't generate these yet, so they don't match due to having the minecraft domain
-                );
+        );
 
         @Override
         public void run(CachedOutput cache) throws IOException
@@ -798,7 +798,7 @@ public class DataGeneratorTest
             stairsBlock((StairBlock) Blocks.ACACIA_STAIRS, "acacia", mcLoc("block/acacia_planks"));
             slabBlock((SlabBlock) Blocks.ACACIA_SLAB, ForgeRegistries.BLOCKS.getKey(Blocks.ACACIA_PLANKS), mcLoc("block/acacia_planks"));
 
-            // TODO 1.19: fix fenceBlock, wallBlock, doorBlock, and co -SS
+            // TODO 1.19: fix fenceBlock, wallBlock, and co -SS
             // fenceBlock((FenceBlock) Blocks.ACACIA_FENCE, "acacia", mcLoc("block/acacia_planks"));
             fenceGateBlock((FenceGateBlock) Blocks.ACACIA_FENCE_GATE, "acacia", mcLoc("block/acacia_planks"));
 
@@ -806,8 +806,7 @@ public class DataGeneratorTest
 
             paneBlock((IronBarsBlock) Blocks.GLASS_PANE, "glass", mcLoc("block/glass"), mcLoc("block/glass_pane_top"));
 
-
-            // doorBlock((DoorBlock) Blocks.ACACIA_DOOR, "acacia", mcLoc("block/acacia_door_bottom"), mcLoc("block/acacia_door_top"));
+            doorBlock((DoorBlock) Blocks.ACACIA_DOOR, "acacia", mcLoc("block/acacia_door_bottom"), mcLoc("block/acacia_door_top"));
             trapdoorBlock((TrapDoorBlock) Blocks.ACACIA_TRAPDOOR, "acacia", mcLoc("block/acacia_trapdoor"), true);
             trapdoorBlock((TrapDoorBlock) Blocks.OAK_TRAPDOOR, "oak", mcLoc("block/oak_trapdoor"), false); // Test a non-orientable trapdoor
 

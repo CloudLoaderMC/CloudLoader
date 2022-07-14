@@ -16,7 +16,10 @@
 
 package net.fabricmc.loader.impl.util.version;
 
+import ml.darubyminer360.cloud.util.Utils;
 import net.fabricmc.loader.api.Version;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 public class StringVersion implements Version {
 	private final String version;
@@ -28,6 +31,11 @@ public class StringVersion implements Version {
 	@Override
 	public String getFriendlyString() {
 		return version;
+	}
+
+	@Override
+	public ArtifactVersion toArtifactVersion() {
+		return new DefaultArtifactVersion(Utils.replaceAllAfter(this.getFriendlyString(), ".", "", "+"));
 	}
 
 	@Override

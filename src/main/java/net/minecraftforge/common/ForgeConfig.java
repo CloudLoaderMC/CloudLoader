@@ -28,15 +28,13 @@ public class ForgeConfig {
         public final DoubleValue zombieBaseSummonChance;
         public final DoubleValue zombieBabyChance;
 
-        public final BooleanValue treatEmptyTagsAsAir;
-
         public final BooleanValue fixAdvancementLoading;
 
         public final ConfigValue<String> permissionHandler;
 
         Server(ForgeConfigSpec.Builder builder) {
             builder.comment("Server configuration settings")
-                   .push("server");
+                    .push("server");
 
             removeErroringBlockEntities = builder
                     .comment("Set this to true to remove any BlockEntity that throws an error in its update method instead of closing the server and reporting a crash log. BE WARNED THIS COULD SCREW UP EVERYTHING USE SPARINGLY WE ARE NOT RESPONSIBLE FOR DAMAGES.")
@@ -67,12 +65,6 @@ public class ForgeConfig {
                     .translation("forge.configgui.zombieBabyChance")
                     .worldRestart()
                     .defineInRange("zombieBabyChance", 0.05D, 0.0D, 1.0D);
-
-            treatEmptyTagsAsAir = builder
-                    .comment("Vanilla will treat crafting recipes using empty tags as air, and allow you to craft with nothing in that slot. This changes empty tags to use BARRIER as the item. To prevent crafting with air.")
-                    .translation("forge.configgui.treatEmptyTagsAsAir")
-                    .define("treatEmptyTagsAsAir", false);
-
             fixAdvancementLoading = builder
                     .comment("Fix advancement loading to use a proper topological sort. This may have visibility side-effects and can thus be turned off if needed for data-pack compatibility.")
                     .translation("forge.configgui.fixAdvancementLoading")
@@ -91,9 +83,32 @@ public class ForgeConfig {
      * General configuration that doesn't need to be synchronized but needs to be available before server startup
      */
     public static class Common {
+        public final BooleanValue cachePackAccess;
+        public final BooleanValue indexVanillaPackCachesOnThread;
+        public final BooleanValue indexModPackCachesOnThread;
+
         Common(ForgeConfigSpec.Builder builder) {
             builder.comment("General configuration settings")
                     .push("general");
+
+            cachePackAccess = builder
+                    .comment("Set this to true to cache resource listings in resource and data packs")
+                    .translation("forge.configgui.cachePackAccess")
+                    .worldRestart()
+                    .define("cachePackAccess", true);
+
+            indexVanillaPackCachesOnThread = builder
+                    .comment("Set this to true to index vanilla resource and data packs on thread")
+                    .translation("forge.configgui.indexVanillaPackCachesOnThread")
+                    .worldRestart()
+                    .define("indexVanillaPackCachesOnThread", false);
+
+            indexModPackCachesOnThread = builder
+                    .comment("Set this to true to index mod resource and data packs on thread")
+                    .translation("forge.configgui.indexModPackCachesOnThread")
+                    .worldRestart()
+                    .define("indexModPackCachesOnThread", false);
+
 
             builder.pop();
         }
@@ -111,31 +126,38 @@ public class ForgeConfig {
 
         public final BooleanValue useCombinedDepthStencilAttachment;
 
+        public final BooleanValue compressLanIPv6Addresses;
+
         Client(ForgeConfigSpec.Builder builder) {
             builder.comment("Client only settings, mostly things related to rendering")
-                   .push("client");
+                    .push("client");
 
             alwaysSetupTerrainOffThread = builder
-                .comment("Enable Forge to queue all chunk updates to the Chunk Update thread.",
-                        "May increase FPS significantly, but may also cause weird rendering lag.",
-                        "Not recommended for computers without a significant number of cores available.")
-                .translation("forge.configgui.alwaysSetupTerrainOffThread")
-                .define("alwaysSetupTerrainOffThread", false);
+                    .comment("Enable Forge to queue all chunk updates to the Chunk Update thread.",
+                            "May increase FPS significantly, but may also cause weird rendering lag.",
+                            "Not recommended for computers without a significant number of cores available.")
+                    .translation("forge.configgui.alwaysSetupTerrainOffThread")
+                    .define("alwaysSetupTerrainOffThread", false);
 
             experimentalForgeLightPipelineEnabled = builder
-                .comment("EXPERIMENTAL: Enable the Forge block rendering pipeline - fixes the lighting of custom models.")
-                .translation("forge.configgui.forgeLightPipelineEnabled")
-                .define("experimentalForgeLightPipelineEnabled", false);
+                    .comment("EXPERIMENTAL: Enable the Forge block rendering pipeline - fixes the lighting of custom models.")
+                    .translation("forge.configgui.forgeLightPipelineEnabled")
+                    .define("experimentalForgeLightPipelineEnabled", false);
 
             showLoadWarnings = builder
-                .comment("When enabled, Forge will show any warnings that occurred during loading.")
-                .translation("forge.configgui.showLoadWarnings")
-                .define("showLoadWarnings", true);
+                    .comment("When enabled, Forge will show any warnings that occurred during loading.")
+                    .translation("forge.configgui.showLoadWarnings")
+                    .define("showLoadWarnings", true);
 
             useCombinedDepthStencilAttachment = builder
                     .comment("Set to true to use a combined DEPTH_STENCIL attachment instead of two separate ones.")
                     .translation("forge.configgui.useCombinedDepthStencilAttachment")
                     .define("useCombinedDepthStencilAttachment", false);
+
+            compressLanIPv6Addresses = builder
+                    .comment("When enabled, Forge will convert discovered 'Open to LAN' IPv6 addresses to their more compact, compressed representation")
+                    .translation("forge.configgui.compressLanIPv6Addresses")
+                    .define("compressLanIPv6Addresses", true);
 
             builder.pop();
         }

@@ -18,9 +18,12 @@ package net.fabricmc.loader.util.version;
 
 import java.util.Optional;
 
+import ml.darubyminer360.cloud.util.Utils;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 /**
  * @deprecated Internal API, do not use
@@ -60,6 +63,11 @@ public class SemanticVersionImpl implements SemanticVersion {
 	@Override
 	public String getFriendlyString() {
 		return parent.getFriendlyString();
+	}
+
+	@Override
+	public ArtifactVersion toArtifactVersion() {
+		return new DefaultArtifactVersion(Utils.replaceAllAfter(this.getFriendlyString(), ".", "", "+"));
 	}
 
 	@Override

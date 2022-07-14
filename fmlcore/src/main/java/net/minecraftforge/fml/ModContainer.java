@@ -10,6 +10,7 @@ import net.minecraftforge.fml.config.IConfigEvent;
 import net.minecraftforge.fml.config.ModConfig;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.forgespi.language.ModLoaderType;
 
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -168,4 +169,8 @@ public abstract class ModContainer
      * @param e Event to accept
      */
     protected <T extends Event & IModBusEvent> void acceptEvent(T e) {}
+
+    public ModLoaderType getNativeLoader() {
+        return modInfo.getOwningFile().getNativeLoader();
+    }
 }

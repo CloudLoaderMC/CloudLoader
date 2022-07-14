@@ -7,6 +7,7 @@ package net.minecraftforge.fml.config;
 
 import com.electronwill.nightconfig.core.ConfigFormat;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.electronwill.nightconfig.core.file.FileWatcher;
 import com.electronwill.nightconfig.core.io.ParsingException;
 import com.electronwill.nightconfig.core.io.WritingMode;
@@ -25,19 +26,33 @@ import static net.minecraftforge.fml.config.ConfigTracker.CONFIG;
 
 public class ConfigFileTypeHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
+    static ConfigFileTypeHandler JSON = new ConfigFileTypeHandler();
     static ConfigFileTypeHandler TOML = new ConfigFileTypeHandler();
     private static final Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
 
-    public Function<ModConfig, CommentedFileConfig> reader(Path configBasePath) {
+    public Function<ModConfig, FileConfig> reader(Path configBasePath) {
         return (c) -> {
             final Path configPath = configBasePath.resolve(c.getFileName());
-            final CommentedFileConfig configData = CommentedFileConfig.builder(configPath).sync().
-                    preserveInsertionOrder().
-                    autosave().
-                    onFileNotFound((newfile, configFormat)-> setupConfigFile(c, newfile, configFormat)).
-                    writingMode(WritingMode.REPLACE).
-                    build();
-            LOGGER.debug(CONFIG, "Built TOML config for {}", configPath.toString());
+            final FileConfig configData;
+
+            if (this == JSON) {
+                configData = CommentedFileConfig.builder(configPath).sync().
+                        preserveInsertionOrder().
+                        autosave().
+                        onFileNotFound((newfile, configFormat)-> setupConfigFile(c, newfile, configFormat)).
+                        writingMode(WritingMode.REPLACE).
+                        build();
+                LOGGER.debug(CONFIG, "Built JSON config for {}", configPath.toString());
+            }
+            else {
+                configData = CommentedFileConfig.builder(configPath).sync().
+                        preserveInsertionOrder().
+                        autosave().
+                        onFileNotFound((newfile, configFormat) -> setupConfigFile(c, newfile, configFormat)).
+                        writingMode(WritingMode.REPLACE).
+                        build();
+                LOGGER.debug(CONFIG, "Built TOML config for {}", configPath.toString());
+            }
             try
             {
                 configData.load();
@@ -46,10 +61,20 @@ public class ConfigFileTypeHandler {
             {
                 throw new ConfigLoadingException(c, ex);
             }
-            LOGGER.debug(CONFIG, "Loaded TOML config file {}", configPath.toString());
+            if (this == JSON) {
+                LOGGER.debug(CONFIG, "Loaded JSON config file {}", configPath.toString());
+            }
+            else {
+                LOGGER.debug(CONFIG, "Loaded TOML config file {}", configPath.toString());
+            }
             try {
                 FileWatcher.defaultInstance().addWatch(configPath, new ConfigWatcher(c, configData, Thread.currentThread().getContextClassLoader()));
-                LOGGER.debug(CONFIG, "Watching TOML config file {} for changes", configPath.toString());
+                if (this == JSON) {
+                    LOGGER.debug(CONFIG, "Watching JSON config file {} for changes", configPath.toString());
+                }
+                else {
+                    LOGGER.debug(CONFIG, "Watching TOML config file {} for changes", configPath.toString());
+                }
             } catch (IOException e) {
                 throw new RuntimeException("Couldn't watch config file", e);
             }
@@ -79,16 +104,16 @@ public class ConfigFileTypeHandler {
         return true;
     }
 
-    public static void backUpConfig(final CommentedFileConfig commentedFileConfig)
+    public static void backUpConfig(final FileConfig fileConfig)
     {
-        backUpConfig(commentedFileConfig, 5); //TODO: Think of a way for mods to set their own preference (include a sanity check as well, no disk stuffing)
+        backUpConfig(fileConfig, 5); // TODO: Think of a way for mods to set their own preference (include a sanity check as well, no disk stuffing)
     }
 
-    public static void backUpConfig(final CommentedFileConfig commentedFileConfig, final int maxBackups)
+    public static void backUpConfig(final FileConfig fileConfig, final int maxBackups)
     {
-        Path bakFileLocation = commentedFileConfig.getNioPath().getParent();
-        String bakFileName = FilenameUtils.removeExtension(commentedFileConfig.getFile().getName());
-        String bakFileExtension = FilenameUtils.getExtension(commentedFileConfig.getFile().getName()) + ".bak";
+        Path bakFileLocation = fileConfig.getNioPath().getParent();
+        String bakFileName = FilenameUtils.removeExtension(fileConfig.getFile().getName());
+        String bakFileExtension = FilenameUtils.getExtension(fileConfig.getFile().getName()) + ".bak";
         Path bakFile = bakFileLocation.resolve(bakFileName + "-1" + "." + bakFileExtension);
         try
         {
@@ -103,22 +128,22 @@ public class ConfigFileTypeHandler {
                         Files.move(oldBak, bakFileLocation.resolve(bakFileName + "-" + (i + 1) + "." + bakFileExtension));
                 }
             }
-            Files.copy(commentedFileConfig.getNioPath(), bakFile);
+            Files.copy(fileConfig.getNioPath(), bakFile);
         }
         catch (IOException exception)
         {
-            LOGGER.warn(CONFIG, "Failed to back up config file {}", commentedFileConfig.getNioPath(), exception);
+            LOGGER.warn(CONFIG, "Failed to back up config file {}", fileConfig.getNioPath(), exception);
         }
     }
 
     private static class ConfigWatcher implements Runnable {
         private final ModConfig modConfig;
-        private final CommentedFileConfig commentedFileConfig;
+        private final FileConfig fileConfig;
         private final ClassLoader realClassLoader;
 
-        ConfigWatcher(final ModConfig modConfig, final CommentedFileConfig commentedFileConfig, final ClassLoader classLoader) {
+        ConfigWatcher(final ModConfig modConfig, final FileConfig fileConfig, final ClassLoader classLoader) {
             this.modConfig = modConfig;
-            this.commentedFileConfig = commentedFileConfig;
+            this.fileConfig = fileConfig;
             this.realClassLoader = classLoader;
         }
 
@@ -129,13 +154,13 @@ public class ConfigFileTypeHandler {
             if (!this.modConfig.getSpec().isCorrecting()) {
                 try
                 {
-                    this.commentedFileConfig.load();
-                    if(!this.modConfig.getSpec().isCorrect(commentedFileConfig))
+                    this.fileConfig.load();
+                    if (!this.modConfig.getSpec().isCorrect(fileConfig))
                     {
-                        LOGGER.warn(CONFIG, "Configuration file {} is not correct. Correcting", commentedFileConfig.getFile().getAbsolutePath());
-                        ConfigFileTypeHandler.backUpConfig(commentedFileConfig);
-                        this.modConfig.getSpec().correct(commentedFileConfig);
-                        commentedFileConfig.save();
+                        LOGGER.warn(CONFIG, "Configuration file {} is not correct. Correcting", fileConfig.getFile().getAbsolutePath());
+                        ConfigFileTypeHandler.backUpConfig(fileConfig);
+                        this.modConfig.getSpec().correct(fileConfig);
+                        fileConfig.save();
                     }
                 }
                 catch (ParsingException ex)

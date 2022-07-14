@@ -17,6 +17,7 @@ import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 import net.minecraftforge.fml.loading.progress.StartupMessageManager;
 import net.minecraftforge.forgespi.language.IModInfo;
 import net.minecraftforge.forgespi.language.IModLanguageProvider;
+import net.minecraftforge.forgespi.language.ModLoaderType;
 import net.minecraftforge.forgespi.locating.ForgeFeature;
 import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
@@ -252,7 +253,7 @@ public class ModLoader
         final List<ModContainer> containers = modFile.getScanResult().getTargets()
                 .entrySet()
                 .stream()
-                .map(e -> buildModContainerFromTOML(modFile, modInfoMap, e))
+                .map(e -> buildModContainerFromFile(modFile, modInfoMap, e))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
         if (containers.size() != modInfoMap.size()) {
@@ -266,7 +267,17 @@ public class ModLoader
         return containers.stream().filter(mc -> mc.modLoadingStage != ModLoadingStage.ERROR).collect(Collectors.toList());
     }
 
-    private ModContainer buildModContainerFromTOML(final IModFile modFile, final Map<String, IModInfo> modInfoMap, final Map.Entry<String, ? extends IModLanguageProvider.IModLanguageLoader> idToProviderEntry) {
+    private ModContainer buildModContainerFromFile(final IModFile modFile, final Map<String, IModInfo> modInfoMap, final Map.Entry<String, ? extends IModLanguageProvider.IModLanguageLoader> idToProviderEntry) {
+        return buildModContainerFromForgeTOML(modFile, modInfoMap, idToProviderEntry);
+        /*if (modFile.getModFileInfo().getNativeLoader() == ModLoaderType.FABRIC) {
+            return buildModContainerFromFabricJSON(modFile, modInfoMap, idToProviderEntry);
+        }
+        else {
+            return buildModContainerFromForgeTOML(modFile, modInfoMap, idToProviderEntry);
+        }*/
+    }
+
+    private ModContainer buildModContainerFromForgeTOML(final IModFile modFile, final Map<String, IModInfo> modInfoMap, final Map.Entry<String, ? extends IModLanguageProvider.IModLanguageLoader> idToProviderEntry) {
         try {
             final String modId = idToProviderEntry.getKey();
             final IModLanguageProvider.IModLanguageLoader languageLoader = idToProviderEntry.getValue();

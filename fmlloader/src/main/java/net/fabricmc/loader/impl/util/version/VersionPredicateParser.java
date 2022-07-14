@@ -31,6 +31,11 @@ import net.fabricmc.loader.api.metadata.version.VersionComparisonOperator;
 import net.fabricmc.loader.api.metadata.version.VersionInterval;
 import net.fabricmc.loader.api.metadata.version.VersionPredicate;
 import net.fabricmc.loader.api.metadata.version.VersionPredicate.PredicateTerm;
+import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.forgespi.language.MavenVersionAdapter;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
+import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
+import org.apache.maven.artifact.versioning.VersionRange;
 
 public final class VersionPredicateParser {
 	private static final VersionComparisonOperator[] OPERATORS = VersionComparisonOperator.values();
@@ -133,6 +138,12 @@ public final class VersionPredicateParser {
 		}
 
 		@Override
+		public VersionRange toMavenVersionRange() {
+			// Could also return null but this is better for the API and is also more readable.
+			return IModInfo.UNBOUNDED;
+		}
+
+		@Override
 		public String toString() {
 			return "*";
 		}
@@ -169,6 +180,23 @@ public final class VersionPredicateParser {
 			} else {
 				return new VersionIntervalImpl(refVersion, true, refVersion, true);
 			}
+		}
+
+		@Override
+		public VersionRange toMavenVersionRange() {
+			VersionRange result;
+
+			switch (operator) {
+				case GREATER_EQUAL -> result = MavenVersionAdapter.createFromVersionSpec("[" + refVersion + ",)");
+				case LESS_EQUAL -> result = MavenVersionAdapter.createFromVersionSpec("(," + refVersion + "]");
+				case GREATER -> result = MavenVersionAdapter.createFromVersionSpec("(" + refVersion + ",)");
+				case LESS -> result = MavenVersionAdapter.createFromVersionSpec("(," + refVersion + ")");
+				case EQUAL -> result = MavenVersionAdapter.createFromVersionSpec("[" + refVersion + "]");
+				case SAME_TO_NEXT_MINOR -> result = MavenVersionAdapter.createFromVersionSpec("[" + refVersion.getFriendlyString().split("\\.")[0] + "." + refVersion.getFriendlyString().split("\\.")[1] + "," + refVersion.getFriendlyString().split("\\.")[0] + "." + (Integer.parseInt(refVersion.getFriendlyString().split("\\.")[1]) + 1) + ")");
+				case SAME_TO_NEXT_MAJOR -> result = MavenVersionAdapter.createFromVersionSpec("[" + refVersion.getFriendlyString().split("\\.")[0] + "," + (Integer.parseInt(refVersion.getFriendlyString().split("\\.")[0]) + 1) + ")");
+				default -> result = IModInfo.UNBOUNDED;
+			}
+			return result;
 		}
 
 		@Override
@@ -237,6 +265,27 @@ public final class VersionPredicateParser {
 			}
 
 			return ret;
+		}
+
+		@Override
+		public VersionRange toMavenVersionRange() {
+			StringBuilder spec = new StringBuilder();
+			for (int i = 0; i < predicates.size(); i++) {
+				if (i != 0) {
+					spec.append(",");
+				}
+				SingleVersionPredicate version = predicates.get(i);
+				switch (version.operator) {
+					case GREATER_EQUAL -> spec.append("[").append(version.refVersion).append(",)");
+					case LESS_EQUAL -> spec.append("(,").append(version.refVersion).append("]");
+					case GREATER -> spec.append("(").append(version.refVersion).append(",)");
+					case LESS -> spec.append("(,").append(version.refVersion).append(")");
+					case EQUAL -> spec.append("[").append(version.refVersion).append("]");
+					case SAME_TO_NEXT_MINOR -> spec.append("[").append(version.refVersion.getFriendlyString().split("\\.")[0]).append(".").append(version.refVersion.getFriendlyString().split("\\.")[1]).append(",").append(version.refVersion.getFriendlyString().split("\\.")[0]).append(".").append(Integer.parseInt(version.refVersion.getFriendlyString().split("\\.")[1]) + 1).append(")");
+					case SAME_TO_NEXT_MAJOR -> spec.append("[").append(version.refVersion.getFriendlyString().split("\\.")[0]).append(",").append(Integer.parseInt(version.refVersion.getFriendlyString().split("\\.")[0]) + 1).append(")");
+				}
+			}
+			return MavenVersionAdapter.createFromVersionSpec(spec.toString());
 		}
 
 		@Override

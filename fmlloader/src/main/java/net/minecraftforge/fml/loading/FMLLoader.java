@@ -10,6 +10,15 @@ import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
+import ml.darubyminer360.cloud.loading.FMLClassLoaderInterface;
+import net.fabricmc.api.EnvType;
+import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
+import net.fabricmc.loader.impl.FormattedException;
+import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
+import net.fabricmc.loader.impl.game.GameProvider;
+import net.fabricmc.loader.impl.launch.FabricLauncherBase;
+import net.fabricmc.loader.impl.util.log.Log;
+import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.minecraftforge.fml.loading.moddiscovery.BackgroundScanHandler;
 import net.minecraftforge.fml.loading.moddiscovery.ModDiscoverer;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
@@ -24,16 +33,19 @@ import net.minecraftforge.forgespi.coremod.ICoreModProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 
 import static net.minecraftforge.fml.loading.LogMarkers.CORE;
 import static net.minecraftforge.fml.loading.LogMarkers.SCAN;
 
-public class FMLLoader
+public class FMLLoader extends FabricLauncherBase
 {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static AccessTransformerService accessTransformer;
@@ -55,8 +67,23 @@ public class FMLLoader
     private static boolean production;
     private static IModuleLayerManager moduleLayerManager;
 
+
+    protected Map<String, Object> properties = new HashMap<>();
+
+    private FMLClassLoaderInterface classLoader;
+    private boolean isDevelopment;
+    private EnvType envType;
+    private final List<Path> classPath = new ArrayList<>();
+    private GameProvider provider;
+    private boolean unlocked;
+
+    private FMLLoader() {
+        super();
+    }
+
     static void onInitialLoad(IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException
     {
+        new FMLLoader();
         final String version = LauncherVersion.getVersion();
         LOGGER.debug(CORE,"FML {} loading", version);
         final Package modLauncherPackage = ITransformationService.class.getPackage();
@@ -111,16 +138,24 @@ public class FMLLoader
         LOGGER.debug(CORE,"FML found CoreMod version : {}", coremodPackage.getImplementationVersion());
 
 
-        LOGGER.debug(CORE, "Found ForgeSPI package implementation version {}", Environment.class.getPackage().getImplementationVersion());
-        LOGGER.debug(CORE, "Found ForgeSPI package specification {}", Environment.class.getPackage().getSpecificationVersion());
+        try {
+            EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
+        } catch (RuntimeException e) {
+            throw new FormattedException("A mod crashed on startup!", e);
+        }
+
+
+        LOGGER.debug(CORE, "Found CloudSPI package implementation version {}", Environment.class.getPackage().getImplementationVersion());
+        LOGGER.debug(CORE, "Found CloudSPI package specification {}", Environment.class.getPackage().getSpecificationVersion());
         if (Integer.parseInt(Environment.class.getPackage().getSpecificationVersion()) < 2) {
-            LOGGER.error(CORE, "Found an out of date ForgeSPI implementation: {}, loading cannot continue", Environment.class.getPackage().getSpecificationVersion());
-            throw new IncompatibleEnvironmentException("ForgeSPI is out of date, we cannot continue");
+            LOGGER.error(CORE, "Found an out of date CloudSPI implementation: {}, loading cannot continue", Environment.class.getPackage().getSpecificationVersion());
+            throw new IncompatibleEnvironmentException("CloudSPI is out of date, we cannot continue");
         }
 
         try {
             Class.forName("com.electronwill.nightconfig.core.Config", false, environment.getClass().getClassLoader());
             Class.forName("com.electronwill.nightconfig.toml.TomlFormat", false, environment.getClass().getClassLoader());
+            Class.forName("com.electronwill.nightconfig.json.JsonFormat", false, environment.getClass().getClassLoader());
         } catch (ClassNotFoundException e) {
             LOGGER.error(CORE, "Failed to load NightConfig");
             throw new IncompatibleEnvironmentException("Missing NightConfig");
@@ -255,5 +290,87 @@ public class FMLLoader
 
     public static VersionInfo versionInfo() {
         return versionInfo;
+    }
+
+    @Override
+    public void addToClassPath(Path path, String... allowedPrefixes) {
+        Log.debug(LogCategory.KNOT, "Adding " + path + " to classpath.");
+
+        classLoader.setAllowedPrefixes(path, allowedPrefixes);
+        classLoader.addCodeSource(path);
+    }
+
+    @Override
+    public void setAllowedPrefixes(Path path, String... prefixes) {
+        classLoader.setAllowedPrefixes(path, prefixes);
+    }
+
+    @Override
+    public void setValidParentClassPath(Collection<Path> paths) {
+        classLoader.setValidParentClassPath(paths);
+    }
+
+    @Override
+    public EnvType getEnvironmentType() {
+        return envType;
+    }
+
+    @Override
+    public boolean isClassLoaded(String name) {
+        return classLoader.isClassLoaded(name);
+    }
+
+    @Override
+    public Class<?> loadIntoTarget(String name) throws ClassNotFoundException {
+        return classLoader.loadIntoTarget(name);
+    }
+
+    @Override
+    public InputStream getResourceAsStream(String name) {
+        return classLoader.getClassLoader().getResourceAsStream(name);
+    }
+
+    @Override
+    public ClassLoader getTargetClassLoader() {
+        FMLClassLoaderInterface classLoader = this.classLoader;
+
+        return classLoader != null ? classLoader.getClassLoader() : null;
+    }
+
+    @Override
+    public byte[] getClassByteArray(String name, boolean runTransformers) throws IOException {
+        if (!unlocked) throw new IllegalStateException("early getClassByteArray access");
+
+        if (runTransformers) {
+            return classLoader.getPreMixinClassBytes(name);
+        } else {
+            return classLoader.getRawClassBytes(name);
+        }
+    }
+
+    @Override
+    public Manifest getManifest(Path originPath) {
+        return classLoader.getManifest(originPath);
+    }
+
+    @Override
+    public boolean isDevelopment() {
+        return isDevelopment;
+    }
+
+    @Override
+    public String getEntrypoint() {
+        return provider.getEntrypoint();
+    }
+
+    @Override
+    public String getTargetNamespace() {
+        // TODO: Won't work outside of Yarn
+        return isDevelopment ? "named" : "intermediary";
+    }
+
+    @Override
+    public List<Path> getClassPath() {
+        return classPath;
     }
 }

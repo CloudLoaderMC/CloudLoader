@@ -37,6 +37,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.Manifest;
 
+import org.spongepowered.asm.mixin.MixinEnvironment;
 import org.spongepowered.asm.mixin.transformer.IMixinTransformer;
 
 import net.fabricmc.api.EnvType;
@@ -104,7 +105,11 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
 	public void initializeTransformers() {
 		if (transformInitialized) throw new IllegalStateException("Cannot initialize KnotClassDelegate twice!");
 
-		mixinTransformer = MixinServiceKnot.getTransformer();
+//		mixinTransformer = MixinServiceKnot.getTransformer();
+		Object transformer = MixinEnvironment.getCurrentEnvironment().getActiveTransformer();
+		if (transformer instanceof IMixinTransformer) {
+			mixinTransformer = (IMixinTransformer) MixinEnvironment.getCurrentEnvironment().getActiveTransformer();
+		}
 
 		if (mixinTransformer == null) {
 			try { // reflective instantiation for older mixin versions
@@ -520,7 +525,7 @@ final class KnotClassDelegate<T extends ClassLoader & ClassLoaderAccess> impleme
 		}
 	}
 
-	interface ClassLoaderAccess {
+	public interface ClassLoaderAccess {
 		void addUrlFwd(URL url);
 		URL findResourceFwd(String name);
 

@@ -36,7 +36,7 @@ import java.util.jar.Attributes;
 import java.util.jar.Manifest;
 
 public class ModFile implements IModFile {
-    // Mods either must have a mods.toml or a manifest. We can no longer just put any jar on the classpath.
+    // Mods must have a mods.toml, fabric.mod.json, or a manifest. We can no longer just put any jar on the classpath.
     @Deprecated(forRemoval = true, since = "1.18")
     public static final Manifest DEFAULTMANIFEST;
     private static final Logger LOGGER = LogUtils.getLogger();

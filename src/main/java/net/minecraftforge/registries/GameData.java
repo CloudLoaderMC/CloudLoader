@@ -11,6 +11,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.Lifecycle;
 import java.util.LinkedHashSet;
 import net.minecraft.core.DefaultedRegistry;
@@ -37,7 +38,7 @@ import net.minecraft.world.level.material.Fluid;
 import net.minecraft.world.level.material.Material;
 import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.common.loot.GlobalLootModifierSerializer;
+import net.minecraftforge.common.loot.IGlobalLootModifier;
 import net.minecraftforge.common.util.LogMessageAdapter;
 import net.minecraftforge.fluids.FluidType;
 import net.minecraftforge.fml.ModLoader;
@@ -142,7 +143,7 @@ public class GameData
         return makeRegistry(DATA_SERIALIZERS, 256 /*vanilla space*/, MAX_VARINT).disableSaving().disableOverrides();
     }
 
-    static RegistryBuilder<GlobalLootModifierSerializer<?>> getGLMSerializersRegistryBuilder()
+    static RegistryBuilder<Codec<? extends IGlobalLootModifier>> getGLMSerializersRegistryBuilder()
     {
         return makeRegistry(LOOT_MODIFIER_SERIALIZERS).disableSaving().disableSync();
     }
@@ -664,7 +665,7 @@ public class GameData
                 }
                 else if (isLocalWorld)
                 {
-                   LOGGER.debug(REGISTRIES,"Registry {}: Resuscitating dummy entry {}", key, dummy);
+                    LOGGER.debug(REGISTRIES,"Registry {}: Resuscitating dummy entry {}", key, dummy);
                 }
                 else
                 {
@@ -698,8 +699,8 @@ public class GameData
                 if (!lst.isEmpty())
                 {
                     LOGGER.error(REGISTRIES, () -> LogMessageAdapter.adapt(sb -> {
-                       sb.append("Unidentified mapping from registry ").append(name).append('\n');
-                       lst.stream().sorted().forEach(map -> sb.append('\t').append(map.key).append(": ").append(map.id).append('\n'));
+                        sb.append("Unidentified mapping from registry ").append(name).append('\n');
+                        lst.stream().sorted().forEach(map -> sb.append('\t').append(map.key).append(": ").append(map.id).append('\n'));
                     }));
                 }
                 event.getAllMappings(reg.getRegistryKey()).stream()
@@ -715,9 +716,9 @@ public class GameData
             if (!defaulted.isEmpty())
             {
                 String header = "Forge Mod Loader detected missing registry entries.\n\n" +
-                   "There are " + defaulted.size() + " missing entries in this save.\n" +
-                   "If you continue the missing entries will get removed.\n" +
-                   "A world backup will be automatically created in your saves directory.\n\n";
+                        "There are " + defaulted.size() + " missing entries in this save.\n" +
+                        "If you continue the missing entries will get removed.\n" +
+                        "A world backup will be automatically created in your saves directory.\n\n";
 
                 StringBuilder buf = new StringBuilder();
                 defaulted.asMap().forEach((name, entries) ->

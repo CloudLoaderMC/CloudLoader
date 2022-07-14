@@ -6,6 +6,7 @@
 package net.minecraftforge.fml.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 
 public interface IConfigSpec<T extends IConfigSpec<T>> extends UnmodifiableConfig {
@@ -14,13 +15,13 @@ public interface IConfigSpec<T extends IConfigSpec<T>> extends UnmodifiableConfi
         return (T) this;
     }
 
-    void acceptConfig(CommentedConfig data);
+    void acceptConfig(Config data);
 
     boolean isCorrecting();
 
-    boolean isCorrect(CommentedConfig commentedFileConfig);
+    boolean isCorrect(Config fileConfig);
 
-    int correct(CommentedConfig commentedFileConfig);
+    int correct(Config fileConfig);
 
     void afterReload();
 }

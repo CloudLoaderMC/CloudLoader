@@ -24,6 +24,7 @@ public final class LogCategory {
 	public static final LogCategory GAME_REMAP = create("GameRemap");
 	public static final LogCategory GENERAL = create();
 	public static final LogCategory KNOT = create("Knot");
+	public static final LogCategory FML = create("FML");
 	public static final LogCategory LIB_CLASSIFICATION = create("LibClassify");
 	public static final LogCategory LOG = create("Log");
 	public static final LogCategory MAPPINGS = create("Mappings");

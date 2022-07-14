@@ -5,6 +5,9 @@
 
 package net.minecraftforge.fmlonlyclient;
 
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.ClientPackSource;
 import net.minecraft.server.packs.repository.PackRepository;
@@ -107,6 +110,9 @@ public class ClientModLoader
         loadingComplete = true;
         // reload game settings on main thread
         syncExecutor.execute(()->mc.options.load());
+
+        EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
+        EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
     }
 
     public static boolean completeModLoading()

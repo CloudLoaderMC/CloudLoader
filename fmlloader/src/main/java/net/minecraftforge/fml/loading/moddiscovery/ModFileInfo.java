@@ -8,15 +8,14 @@ package net.minecraftforge.fml.loading.moddiscovery;
 import com.google.common.base.Strings;
 import com.mojang.logging.LogUtils;
 import cpw.mods.modlauncher.api.LamdbaExceptionUtils;
+import net.fabricmc.loader.impl.metadata.LoaderModMetadata;
 import net.minecraftforge.fml.loading.LogMarkers;
 import net.minecraftforge.fml.loading.StringUtils;
-import net.minecraftforge.forgespi.language.IConfigurable;
-import net.minecraftforge.forgespi.language.IModFileInfo;
-import net.minecraftforge.forgespi.language.IModInfo;
-import net.minecraftforge.forgespi.language.MavenVersionAdapter;
+import net.minecraftforge.forgespi.language.*;
 import org.slf4j.Logger;
 import javax.security.auth.x500.X500Principal;
 import java.net.URL;
+import java.nio.file.Files;
 import java.security.CodeSigner;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
@@ -37,16 +36,18 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
     private final ModFile modFile;
     private final URL issueURL;
     private final List<LanguageSpec> languageSpecs;
+    private final LoaderModMetadata fabricMetadata;
     private final boolean showAsResourcePack;
     private final List<IModInfo> mods;
     private final Map<String,Object> properties;
     private final String license;
     private final List<String> usesServices;
 
-    ModFileInfo(final ModFile modFile, final IConfigurable config)
+    ModFileInfo(final ModFile modFile, final IConfigurable config, final LoaderModMetadata fabricMetadata)
     {
         this.modFile = modFile;
         this.config = config;
+        this.fabricMetadata = fabricMetadata;
         var modLoader = config.<String>getConfigElement("modLoader")
                 .orElseThrow(()->new InvalidModFileException("Missing ModLoader in file", this));
         var modLoaderVersion = config.<String>getConfigElement("loaderVersion")
@@ -60,16 +61,20 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
         this.properties = config.<Map<String, Object>>getConfigElement("properties").orElse(Collections.emptyMap());
         this.modFile.setFileProperties(this.properties);
         this.issueURL = config.<String>getConfigElement("issueTrackerURL").map(StringUtils::toURL).orElse(null);
-        final List<? extends IConfigurable> modConfigs = config.getConfigList("mods");
-        if (modConfigs.isEmpty())
-        {
+        final List<? extends IConfigurable> modConfigs;
+        if (this.getNativeLoader() == ModLoaderType.FORGE) {
+            modConfigs = config.getConfigList("mods");
+        }
+        else {
+            modConfigs = List.of(config);
+        }
+        if (modConfigs.isEmpty()) {
             throw new InvalidModFileException("Missing mods list", this);
         }
         this.mods = modConfigs.stream()
                 .map(mi-> new ModInfo(this, mi))
                 .collect(Collectors.toList());
-        if (LOGGER.isDebugEnabled(LogMarkers.LOADING))
-        {
+        if (LOGGER.isDebugEnabled(LogMarkers.LOADING)) {
             LOGGER.debug(LogMarkers.LOADING, "Found valid mod file {} with {} mods - versions {}",
                     this.modFile.getFileName(),
                     this.mods.stream().map(IModInfo::getModId).collect(Collectors.joining(",", "{", "}")),
@@ -77,8 +82,17 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
         }
     }
 
+    public ModFileInfo(final ModFile file, final IConfigurable config) {
+        this(file, config, (LoaderModMetadata) null);
+    }
+
     public ModFileInfo(final ModFile file, final IConfigurable config, final List<LanguageSpec> languageSpecs) {
-        this(file, config);
+        this(file, config, (LoaderModMetadata) null);
+        this.languageSpecs.addAll(languageSpecs);
+    }
+
+    public ModFileInfo(final ModFile file, final IConfigurable config, final List<LanguageSpec> languageSpecs, final LoaderModMetadata fabricMetadata) {
+        this(file, config, fabricMetadata);
         this.languageSpecs.addAll(languageSpecs);
     }
 
@@ -96,6 +110,10 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
     @Override
     public List<LanguageSpec> requiredLanguageLoaders() {
         return this.languageSpecs;
+    }
+
+    public LoaderModMetadata getFabricMetadata() {
+        return fabricMetadata;
     }
 
     @Override
@@ -131,6 +149,14 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
     @Override
     public IConfigurable getConfig() {
         return this;
+    }
+
+    @Override
+    public ModLoaderType getNativeLoader() {
+        if (Files.exists(modFile.findResource("fabric.mod.json"))) {
+            return ModLoaderType.FABRIC;
+        }
+        return ModLoaderType.FORGE;
     }
 
     public URL getIssueURL()

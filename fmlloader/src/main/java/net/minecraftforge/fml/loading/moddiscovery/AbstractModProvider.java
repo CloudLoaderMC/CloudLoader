@@ -12,12 +12,14 @@ import net.minecraftforge.fml.loading.LogMarkers;
 import net.minecraftforge.forgespi.language.IConfigurable;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
+import net.minecraftforge.forgespi.language.ModLoaderType;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.forgespi.locating.IModLocator;
 import net.minecraftforge.forgespi.locating.IModProvider;
 import net.minecraftforge.forgespi.locating.ModFileLoadingException;
 import org.slf4j.Logger;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
@@ -30,6 +32,7 @@ import java.util.jar.Manifest;
 public abstract class AbstractModProvider implements IModProvider
 {
     private static final   Logger LOGGER    = LogUtils.getLogger();
+    protected static final String FABRIC_MOD_JSON = "fabric.mod.json";
     protected static final String MODS_TOML = "META-INF/mods.toml";
     protected static final String MANIFEST = "META-INF/MANIFEST.MF";
 
@@ -37,7 +40,7 @@ public abstract class AbstractModProvider implements IModProvider
         var mjm = new ModJarMetadata();
         var sj = SecureJar.from(
                 Manifest::new,
-                jar -> jar.moduleDataProvider().findFile(MODS_TOML).isPresent() ? mjm : JarMetadata.from(jar, path),
+                jar -> jar.moduleDataProvider().findFile(MODS_TOML).isPresent() || jar.moduleDataProvider().findFile(FABRIC_MOD_JSON).isPresent() ? mjm : JarMetadata.from(jar, path),
                 (root, p) -> true,
                 path
         );
@@ -49,9 +52,15 @@ public abstract class AbstractModProvider implements IModProvider
         }
         if (sj.moduleDataProvider().findFile(MODS_TOML).isPresent()) {
             LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", MODS_TOML, type, path);
+            System.out.println("Found " + MODS_TOML + " mod of type " + type + ": " + Arrays.toString(path));
             mod = new ModFile(sj, this, ModFileParser::modsTomlParser);
+        } else if (sj.moduleDataProvider().findFile(FABRIC_MOD_JSON).isPresent()) {
+            LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", FABRIC_MOD_JSON, type, path);
+            System.out.println("Found " + FABRIC_MOD_JSON + " mod of type " + type + ": " + Arrays.toString(path));
+            mod = new ModFile(sj, this, ModFileParser::fabricModJsonParser);
         } else if (type != null) {
             LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", MANIFEST, type, path);
+            System.out.println("Found " + MANIFEST + " mod of type " + type + ": " + Arrays.toString(path));
             mod = new ModFile(sj, this, this::manifestParser, type);
         } else {
             return new IModLocator.ModFileOrException(null, new ModFileLoadingException("Invalid mod file found "+ Arrays.toString(path)));
@@ -109,6 +118,14 @@ public abstract class AbstractModProvider implements IModProvider
 
         @Override public IModFile getFile() { return mod; }
         @Override public IConfigurable getConfig() { return configurable; }
+
+        @Override
+        public ModLoaderType getNativeLoader() {
+            if (Files.exists(mod.findResource("fabric.mod.json"))) {
+                return ModLoaderType.FABRIC;
+            }
+            return ModLoaderType.FORGE;
+        }
 
         // These Should never be called as it's only called from ModJarMetadata.version and we bypass that
         @Override public String moduleName() { return mod.getSecureJar().name(); }

@@ -14,13 +14,14 @@ import com.mojang.authlib.GameProfile;
 
 import com.mojang.brigadier.CommandDispatcher;
 import net.minecraft.commands.CommandBuildContext;
-import net.minecraft.network.chat.ChatSender;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.players.PlayerList;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.Container;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ThrownEnderpearl;
+import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.portal.PortalShape;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.item.TooltipFlag;
@@ -58,7 +59,6 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.phys.HitResult;
-import net.minecraft.network.chat.ChatType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.GameRules;
@@ -69,9 +69,6 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.storage.ServerLevelData;
 import net.minecraft.world.level.storage.PlayerDataStorage;
 import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.client.MinecraftForgeClient;
-import net.minecraftforge.client.event.ClientChatEvent;
-import net.minecraftforge.client.event.ClientChatReceivedEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.capabilities.CapabilityDispatcher;
@@ -305,20 +302,6 @@ public class ForgeEventFactory
     public static void firePlayerLoadingEvent(Player player, PlayerDataStorage playerFileData, String uuidString)
     {
         MinecraftForge.EVENT_BUS.post(new PlayerEvent.LoadFromFile(player, playerFileData.getPlayerDataFolder(), uuidString));
-    }
-
-    @Nullable
-    public static Component onClientChat(ChatType type, Component message, ChatSender chatSender)
-    {
-        ClientChatReceivedEvent event = new ClientChatReceivedEvent(type, message, chatSender);
-        return MinecraftForge.EVENT_BUS.post(event) ? null : event.getMessage();
-    }
-
-    @NotNull
-    public static String onClientSendMessage(String message)
-    {
-        ClientChatEvent event = new ClientChatEvent(message);
-        return MinecraftForge.EVENT_BUS.post(event) ? "" : event.getMessage();
     }
 
     @Nullable
@@ -624,18 +607,14 @@ public class ForgeEventFactory
         return event.getResult() != Result.DENY;
     }
 
-    public static void fireChunkWatch(boolean watch, ServerPlayer entity, ChunkPos chunkpos, ServerLevel level)
+    public static void fireChunkWatch(ServerPlayer entity, LevelChunk chunk, ServerLevel level)
     {
-        if (watch)
-            MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(entity, chunkpos, level));
-        else
-            MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.UnWatch(entity, chunkpos, level));
+        MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.Watch(entity, chunk, level));
     }
 
-    public static void fireChunkWatch(boolean wasLoaded, boolean load, ServerPlayer entity, ChunkPos chunkpos, ServerLevel level)
+    public static void fireChunkUnWatch(ServerPlayer entity, ChunkPos chunkpos, ServerLevel level)
     {
-        if (wasLoaded != load)
-            fireChunkWatch(load, entity, chunkpos, level);
+        MinecraftForge.EVENT_BUS.post(new ChunkWatchEvent.UnWatch(entity, chunkpos, level));
     }
 
     public static boolean onPistonMovePre(Level level, BlockPos pos, Direction direction, boolean extending)
@@ -775,7 +754,6 @@ public class ForgeEventFactory
 
     public static void onRenderTickStart(float timer)
     {
-        MinecraftForgeClient.setPartialTick(timer);
         MinecraftForge.EVENT_BUS.post(new TickEvent.RenderTickEvent(TickEvent.Phase.START, timer));
     }
 
@@ -814,13 +792,13 @@ public class ForgeEventFactory
         MinecraftForge.EVENT_BUS.post(new TickEvent.ClientTickEvent(TickEvent.Phase.END));
     }
 
-    public static void onPreServerTick(BooleanSupplier haveTime)
+    public static void onPreServerTick(BooleanSupplier haveTime, MinecraftServer server)
     {
-        MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.START, haveTime));
+        MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.START, haveTime, server));
     }
 
-    public static void onPostServerTick(BooleanSupplier haveTime)
+    public static void onPostServerTick(BooleanSupplier haveTime, MinecraftServer server)
     {
-        MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.END, haveTime));
+        MinecraftForge.EVENT_BUS.post(new TickEvent.ServerTickEvent(TickEvent.Phase.END, haveTime, server));
     }
 }

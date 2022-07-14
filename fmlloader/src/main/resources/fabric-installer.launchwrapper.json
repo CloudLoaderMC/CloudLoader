@@ -12,8 +12,8 @@
         "url": "https://maven.fabricmc.net/"
       },
       {
-        "name": "net.fabricmc:sponge-mixin:0.11.4+mixin.0.8.5",
-        "url": "https://maven.fabricmc.net/"
+        "name": "ml.cloudmc:sponge-mixin:0.9.0",
+        "url": "https://maven.cloudmc.ml/releases/"
       },
       {
         "name": "net.fabricmc:tiny-remapper:0.8.2",

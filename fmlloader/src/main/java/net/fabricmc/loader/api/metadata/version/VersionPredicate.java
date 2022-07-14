@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.impl.util.version.VersionPredicateParser;
+import org.apache.maven.artifact.versioning.VersionRange;
 
 public interface VersionPredicate extends Predicate<Version> {
 	/**
@@ -37,6 +38,8 @@ public interface VersionPredicate extends Predicate<Version> {
 	 * @return Covered version interval or null if nothing
 	 */
 	VersionInterval getInterval();
+
+	VersionRange toMavenVersionRange();
 
 	interface PredicateTerm {
 		VersionComparisonOperator getOperator();

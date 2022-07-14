@@ -5,6 +5,7 @@
 
 package net.minecraftforge.fml;
 
+import net.minecraftforge.fml.config.ConfigFileTypeHandler;
 import net.minecraftforge.fml.config.IConfigSpec;
 import net.minecraftforge.fml.config.ModConfig;
 
@@ -45,8 +46,16 @@ public class ModLoadingContext
         getActiveContainer().registerExtensionPoint(point, extension);
     }
 
+    public void registerConfig(ModConfig.Type type, IConfigSpec<?> spec, ConfigFileTypeHandler configHandler) {
+        getActiveContainer().addConfig(new ModConfig(type, spec, getActiveContainer(), configHandler));
+    }
+
     public void registerConfig(ModConfig.Type type, IConfigSpec<?> spec) {
         getActiveContainer().addConfig(new ModConfig(type, spec, getActiveContainer()));
+    }
+
+    public void registerConfig(ModConfig.Type type, IConfigSpec<?> spec, String fileName, ConfigFileTypeHandler configHandler) {
+        getActiveContainer().addConfig(new ModConfig(type, spec, getActiveContainer(), fileName, configHandler));
     }
 
     public void registerConfig(ModConfig.Type type, IConfigSpec<?> spec, String fileName) {

@@ -39,6 +39,29 @@ public final class ModMetadataParser {
 
 	// Per the ECMA-404 (www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf), the JSON spec does not prohibit duplicate keys.
 	// For all intents and purposes of replicating the logic of Gson's fromJson before we have migrated to JsonReader, duplicate keys will replace previous entries.
+	public static LoaderModMetadata parseMetadata(InputStream is, /*String modPath, List<String> modParentPaths,*/
+												  VersionOverrides versionOverrides, DependencyOverrides depOverrides) throws ParseMetadataException {
+		try {
+			LoaderModMetadata ret = readModMetadata(is);
+
+			versionOverrides.apply(ret);
+			depOverrides.apply(ret);
+
+			MetadataVerifier.verify(ret);
+
+			return ret;
+		} catch (ParseMetadataException e) {
+//			e.setModPaths(modPath, modParentPaths);
+			throw e;
+		} catch (Throwable t) {
+			ParseMetadataException e = new ParseMetadataException(t);
+//			e.setModPaths(modPath, modParentPaths);
+			throw e;
+		}
+	}
+
+	// Per the ECMA-404 (www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf), the JSON spec does not prohibit duplicate keys.
+	// For all intents and purposes of replicating the logic of Gson's fromJson before we have migrated to JsonReader, duplicate keys will replace previous entries.
 	public static LoaderModMetadata parseMetadata(InputStream is, String modPath, List<String> modParentPaths,
 			VersionOverrides versionOverrides, DependencyOverrides depOverrides) throws ParseMetadataException {
 		try {

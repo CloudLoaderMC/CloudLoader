@@ -7,6 +7,7 @@ package net.minecraftforge.fml.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
 import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.Marker;
@@ -57,7 +58,7 @@ public class ConfigTracker {
 
     private void openConfig(final ModConfig config, final Path configBasePath) {
         LOGGER.trace(CONFIG, "Loading config file type {} at {} for {}", config.getType(), config.getFileName(), config.getModId());
-        final CommentedFileConfig configData = config.getHandler().reader(configBasePath).apply(config);
+        final FileConfig configData = config.getHandler().reader(configBasePath).apply(config);
         config.setConfigData(configData);
         config.fireEvent(IConfigEvent.loading(config));
         config.save();

@@ -9,26 +9,72 @@ import com.electronwill.nightconfig.core.file.FileConfig;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.logging.LogUtils;
+import net.fabricmc.loader.impl.discovery.ModCandidate;
+import net.fabricmc.loader.impl.discovery.ModCandidateFinder;
+import net.fabricmc.loader.impl.discovery.ModDiscoverer;
+import net.fabricmc.loader.impl.metadata.*;
+import net.fabricmc.loader.impl.util.LoaderUtil;
+import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.LogMarkers;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.forgespi.locating.ModFileFactory;
 import org.slf4j.Logger;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 public class ModFileParser {
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public static IModFileInfo readModList(final ModFile modFile, final ModFileFactory.ModFileInfoParser parser) {
         return parser.build(modFile);
+    }
+
+    public static IModFileInfo fabricModJsonParser(final IModFile imodFile) {
+        ModFile modFile = (ModFile) imodFile;
+        LOGGER.debug(LogMarkers.LOADING,"Considering mod file candidate {}", modFile.getFilePath());
+        final Path modsjson = modFile.findResource("fabric.mod.json");
+        if (!Files.exists(modsjson)) {
+            LOGGER.warn(LogMarkers.LOADING, "Mod file {} is missing fabric.mod.json file", modFile.getFilePath());
+            return null;
+        }
+
+        final FileConfig fileConfig = FileConfig.builder(modsjson).build();
+        fileConfig.load();
+        fileConfig.close();
+//        fileConfig.set("modLoader", "javafml");
+        fileConfig.set("modLoader", "fabricfml");
+        fileConfig.set("loaderVersion", "[41,)");
+        final NightConfigWrapper configWrapper = new NightConfigWrapper(fileConfig);
+
+        VersionOverrides versionOverrides = new VersionOverrides();
+        DependencyOverrides depOverrides = new DependencyOverrides(FMLPaths.CONFIGDIR.get());
+        ModFileInfo modFileInfo = null; // Shouldn't ever catch either of the exceptions but the try/catch statement is required.
+        try (ZipFile zf = new ZipFile(modFile.getFilePath().toFile())) {
+            ZipEntry entry = zf.getEntry("fabric.mod.json");
+            if (entry == null)
+                return null;
+
+            try (InputStream is = zf.getInputStream(entry)) {
+                modFileInfo = new ModFileInfo(modFile, configWrapper, ModMetadataParser.parseMetadata(is, versionOverrides, depOverrides));
+                configWrapper.setFile(modFileInfo);
+            }
+        } catch (IOException | ParseMetadataException e) {
+            e.printStackTrace();
+        }
+        return modFileInfo;
     }
 
     public static IModFileInfo modsTomlParser(final IModFile imodFile) {

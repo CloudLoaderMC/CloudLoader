@@ -27,7 +27,7 @@ public final class TerminalHandler
             return false;
 
         LineReader reader = LineReaderBuilder.builder()
-                .appName("Cloud")
+                .appName("Forge")
                 .terminal(terminal)
                 .completer(new ConsoleCommandCompleter(server))
                 .build();

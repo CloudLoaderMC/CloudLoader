@@ -6,7 +6,10 @@
 package net.minecraftforge.fml.config;
 
 import com.electronwill.nightconfig.core.CommentedConfig;
+import com.electronwill.nightconfig.core.Config;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
+import com.electronwill.nightconfig.core.file.FileConfig;
+import com.electronwill.nightconfig.json.JsonFormat;
 import com.electronwill.nightconfig.toml.TomlFormat;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.loading.StringUtils;
@@ -16,6 +19,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
+// Added JSON because the module was added for fabric.mod.json & just in case it's needed for something
 public class ModConfig
 {
     private final Type type;
@@ -23,16 +27,24 @@ public class ModConfig
     private final String fileName;
     private final ModContainer container;
     private final ConfigFileTypeHandler configHandler;
-    private CommentedConfig configData;
+    private Config configData;
     private Callable<Void> saveHandler;
 
-    public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer container, final String fileName) {
+    public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer container, final String fileName, ConfigFileTypeHandler configHandler) {
         this.type = type;
         this.spec = spec;
         this.fileName = fileName;
         this.container = container;
-        this.configHandler = ConfigFileTypeHandler.TOML;
+        this.configHandler = configHandler;
         ConfigTracker.INSTANCE.trackConfig(this);
+    }
+
+    public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer container, final String fileName) {
+        this(type, spec, container, fileName, ConfigFileTypeHandler.TOML);
+    }
+
+    public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer activeContainer, ConfigFileTypeHandler configHandler) {
+        this(type, spec, activeContainer, defaultConfigName(type, activeContainer.getModId()), configHandler);
     }
 
     public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer activeContainer) {
@@ -64,11 +76,11 @@ public class ModConfig
         return container.getModId();
     }
 
-    public CommentedConfig getConfigData() {
+    public Config getConfigData() {
         return this.configData;
     }
 
-    void setConfigData(final CommentedConfig configData) {
+    void setConfigData(final Config configData) {
         this.configData = configData;
         this.spec.acceptConfig(this.configData);
     }
@@ -78,15 +90,20 @@ public class ModConfig
     }
 
     public void save() {
-        ((CommentedFileConfig)this.configData).save();
+        ((FileConfig) this.configData).save();
     }
 
     public Path getFullPath() {
-        return ((CommentedFileConfig)this.configData).getNioPath();
+        return ((FileConfig)this.configData).getNioPath();
     }
 
     public void acceptSyncedConfig(byte[] bytes) {
-        setConfigData(TomlFormat.instance().createParser().parse(new ByteArrayInputStream(bytes)));
+        if (fileName.endsWith(".json")) {
+            setConfigData(JsonFormat.fancyInstance().createParser().parse(new ByteArrayInputStream(bytes)));
+        }
+        else {
+            setConfigData(TomlFormat.instance().createParser().parse(new ByteArrayInputStream(bytes)));
+        }
         fireEvent(IConfigEvent.reloading(this));
     }
 

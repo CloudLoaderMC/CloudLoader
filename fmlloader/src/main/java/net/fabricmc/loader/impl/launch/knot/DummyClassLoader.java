@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Enumeration;
 
-class DummyClassLoader extends ClassLoader {
+public class DummyClassLoader extends ClassLoader {
 	private static final Enumeration<URL> NULL_ENUMERATION = new Enumeration<URL>() {
 		@Override
 		public boolean hasMoreElements() {

@@ -18,6 +18,7 @@ package net.fabricmc.loader.api;
 
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.impl.util.version.VersionParser;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
 
 /**
  * Represents a version of a mod.
@@ -40,4 +41,6 @@ public interface Version extends Comparable<Version> {
 	static Version parse(String string) throws VersionParsingException {
 		return VersionParser.parse(string, false);
 	}
+
+	ArtifactVersion toArtifactVersion();
 }

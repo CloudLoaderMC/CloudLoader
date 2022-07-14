@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component>
+  <configuration default="false" factoryName="Application" name="clean clean server" singleton="false" type="Application">
+    <option name="MAIN_CLASS_NAME" value="net.minecraft.server.Main"/>
+    <option name="VM_PARAMETERS" value=""/>
+    <option name="PROGRAM_PARAMETERS" value=""/>
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$\projects\clean\run"/>
+    <module name="ForgeRoot.clean.main"/>
+    <envs>
+      <env name="MOD_CLASSES" value="$PROJECT_DIR$\projects\clean\build\resources\main;$PROJECT_DIR$\projects\clean\build\classes\java\main"/>
+    </envs>
+    <method v="2">
+      <option enabled="true" name="Make"/>
+      <option enabled="true" externalProjectPath="$PROJECT_DIR$" name="Gradle.BeforeRunTask" tasks=":clean:prepareClean_server"/>
+    </method>
+  </configuration>
+</component>

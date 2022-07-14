@@ -21,7 +21,7 @@ import java.util.Collections;
 import java.util.List;
 
 @FunctionalInterface
-interface ModCandidateFinder {
+public interface ModCandidateFinder {
 	void findCandidates(ModCandidateConsumer out);
 
 	interface ModCandidateConsumer {
