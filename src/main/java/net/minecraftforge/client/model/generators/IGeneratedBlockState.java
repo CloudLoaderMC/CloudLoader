@@ -9,7 +9,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.JsonObject;
 
 @VisibleForTesting
-public interface IGeneratedBlockState
+public  interface IGeneratedBlockState
 {
     JsonObject toJson();
 }
