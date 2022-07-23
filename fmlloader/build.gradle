@@ -2,14 +2,12 @@ plugins {
     id 'java'
     id 'java-library'
     id 'eclipse'
-    id 'checkstyle'
     id 'org.cadixdev.licenser'
     id 'com.github.ben-manes.versions'
     id 'org.javamodularity.moduleplugin' version '1.8.3' apply false
 }
 apply plugin: 'java-library'
 apply plugin: 'eclipse'
-apply plugin: 'checkstyle'
 apply plugin: 'jacoco'
 apply plugin: 'org.javamodularity.moduleplugin'
 
@@ -41,7 +39,6 @@ def ENV = System.getenv()
 allprojects {
     apply plugin: 'java-library'
     apply plugin: 'eclipse'
-    apply plugin: 'checkstyle'
 
     def constantsSource = rootProject.file("src/main/java/net/fabricmc/loader/impl/FabricLoaderImpl.java").text
     version = (constantsSource =~ /\s+VERSION\s*=\s*"(.*)";/)[0][1] + (ENV.GITHUB_ACTIONS ? "" : "+local")
@@ -107,14 +104,14 @@ dependencies {
     api("com.electronwill.night-config:core:${NIGHTCONFIG_VERSION}")
     api("com.electronwill.night-config:toml:${NIGHTCONFIG_VERSION}")
     api("com.electronwill.night-config:json:${NIGHTCONFIG_VERSION}")
-    api("cpw.mods:modlauncher:${MODLAUNCHER_VERSION}")
+    api("ml.cloudmc:ModLauncher:${MODLAUNCHER_VERSION}")
     api("ml.cloudmc:CoreMods:${COREMODS_VERSION}")
     api("com.mojang:logging:${MOJANG_LOGGING_VERSION}")
     api "net.minecraftforge:JarJar:${JARJAR_VERSION}"
 
     implementation("net.sf.jopt-simple:jopt-simple:${JOPT_SIMPLE_VERSION}")
     implementation("cpw.mods:securejarhandler:${SECUREJARHANDLER_VERSION}")
-    implementation("net.minecraftforge:accesstransformers:${ACCESSTRANSFORMERS_VERSION}")
+    implementation("ml.cloudmc:AccessTransformers:${ACCESSTRANSFORMERS_VERSION}")
     implementation("net.minecrell:terminalconsoleappender:${TERMINALCONSOLEAPPENDER_VERSION}")
     // implementation("org.jline:jline:${JLINE_VERSION}")
 
@@ -237,32 +234,13 @@ task javadocJar(type: Jar) {
 
 build.dependsOn javadocJar
 
-allprojects {
-    repositories {
-        maven { url "https://maven.cloudmc.ml/releases/" }
-    }
-
-    checkstyle {
-        configFile = project.rootProject.file("checkstyle.xml")
-        toolVersion = '8.44'
-    }
-
-    license {
-        header project.rootProject.file("LICENSE-header.txt")
-        include '**/*.java'
-
-        // Exclude gson since it is google's code, we just modify and bundle it
-        exclude '**/lib/gson/*.java'
-    }
-}
-
 // Causes more trouble than its worth
 tasks.withType(GenerateModuleMetadata) {
     enabled = false
 }
 
 license {
-    header = rootProject.file('LICENSE-header.txt')
+    header = rootProject.file('LICENSES/Forge-header.txt')
 
     include 'net/minecraftforge/'
 }

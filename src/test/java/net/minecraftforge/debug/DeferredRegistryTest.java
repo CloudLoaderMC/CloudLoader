@@ -33,7 +33,7 @@ import net.minecraftforge.client.model.generators.ModelFile;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -67,8 +67,8 @@ public class DeferredRegistryTest {
 
     private static final TagKey<Custom> CUSTOM_TAG_KEY = CUSTOMS.createOptionalTagKey("test_tag", Set.of(CUSTOM));
     private static final Supplier<IForgeRegistry<Custom>> CUSTOM_REG = CUSTOMS.makeRegistry(() ->
-        new RegistryBuilder<Custom>().disableSaving().setMaxID(Integer.MAX_VALUE - 1).hasTags()
-            .onAdd((owner, stage, id, key, obj, old) -> LOGGER.info("Custom Added: " + id + " " + obj.foo()))
+            new RegistryBuilder<Custom>().disableSaving().setMaxID(Integer.MAX_VALUE - 1).hasTags()
+                    .onAdd((owner, stage, id, key, obj, old) -> LOGGER.info("Custom Added: " + id + " " + obj.foo()))
     );
 
     public DeferredRegistryTest() {

@@ -12,7 +12,7 @@ dependencyUpdates.rejectVersionIf { isNonStable(it.candidate.version) }
 dependencies {
     compileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
 
-    api("net.minecraftforge:eventbus:${EVENTBUS_VERSION}")
+    api("ml.cloudmc:EventBus:${EVENTBUS_VERSION}")
 
     implementation(project(':fmlloader'))
     implementation("commons-io:commons-io:${COMMONS_IO_VERSION}")
@@ -57,7 +57,7 @@ tasks.withType(JavaCompile) {
 }
 
 license {
-    header = rootProject.file('LICENSE-header.txt')
+    header = rootProject.file('LICENSES/Forge-header.txt')
 
     include 'net/minecraftforge/'
 }

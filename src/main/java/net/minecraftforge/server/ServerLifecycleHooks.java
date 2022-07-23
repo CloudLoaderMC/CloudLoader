@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -33,6 +32,7 @@ import net.minecraftforge.common.world.BiomeModifier;
 import net.minecraftforge.fml.ModLoader;
 import net.minecraftforge.fml.ModLoadingStage;
 import net.minecraftforge.fml.ModLoadingWarning;
+import net.minecraftforge.forgespi.language.ModLoaderType;
 import net.minecraftforge.network.ConnectionType;
 import net.minecraftforge.network.NetworkConstants;
 import net.minecraftforge.network.ServerStatusPing;
@@ -40,7 +40,7 @@ import net.minecraftforge.network.NetworkHooks;
 import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.forgespi.locating.IModFile;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
-import net.minecraftforge.resource.PathResourcePack;
+import net.minecraftforge.resource.PathPackResources;
 import net.minecraftforge.server.permission.PermissionAPI;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -51,7 +51,6 @@ import net.minecraft.network.Connection;
 import net.minecraft.network.ConnectionProtocol;
 import net.minecraft.network.protocol.handshake.ClientIntentionPacket;
 import net.minecraft.network.protocol.login.ClientboundLoginDisconnectPacket;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.packs.repository.Pack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraftforge.api.distmarker.Dist;
@@ -65,7 +64,6 @@ import net.minecraftforge.event.server.ServerStoppedEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.loading.FileUtils;
 import net.minecraftforge.forgespi.language.IModInfo;
-import net.minecraftforge.registries.DataPackRegistriesHooks;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.GameData;
 
@@ -192,24 +190,25 @@ public class ServerLifecycleHooks
     }
 
     //INTERNAL MODDERS DO NOT USE
-    public static RepositorySource buildPackFinder(Map<IModFile, ? extends PathResourcePack> modResourcePacks) {
+    public static RepositorySource buildPackFinder(Map<IModFile, ? extends PathPackResources> modResourcePacks) {
         return (packList, factory) -> serverPackFinder(modResourcePacks, packList, factory);
     }
 
-    private static void serverPackFinder(Map<IModFile, ? extends PathResourcePack> modResourcePacks, Consumer<Pack> consumer, Pack.PackConstructor factory) {
-        for (Entry<IModFile, ? extends PathResourcePack> e : modResourcePacks.entrySet())
-        {
+    private static void serverPackFinder(Map<IModFile, ? extends PathPackResources> modResourcePacks, Consumer<Pack> consumer, Pack.PackConstructor factory) {
+        for (Entry<IModFile, ? extends PathPackResources> e : modResourcePacks.entrySet()) {
             IModInfo mod = e.getKey().getModInfos().get(0);
             if (Objects.equals(mod.getModId(), "minecraft")) continue; // skip the minecraft "mod"
-            final String name = "mod:" + mod.getModId();
-            final Pack packInfo = Pack.create(name, false, e::getValue, factory, Pack.Position.BOTTOM, PackSource.DEFAULT);
-            if (packInfo == null) {
-                // Vanilla only logs an error, instead of propagating, so handle null and warn that something went wrong
-                ModLoader.get().addWarning(new ModLoadingWarning(mod, ModLoadingStage.ERROR, "fml.modloading.brokenresources", e.getKey()));
-                continue;
+            if (e.getKey().getModFileInfo().getNativeLoader() == ModLoaderType.FORGE) {
+                final String name = "mod:" + mod.getModId();
+                final Pack packInfo = Pack.create(name, false, e::getValue, factory, Pack.Position.BOTTOM, PackSource.DEFAULT);
+                if (packInfo == null) {
+                    // Vanilla only logs an error, instead of propagating, so handle null and warn that something went wrong
+                    ModLoader.get().addWarning(new ModLoadingWarning(mod, ModLoadingStage.ERROR, "fml.modloading.brokenresources", e.getKey()));
+                    continue;
+                }
+                LOGGER.debug(CORE, "Generating PackInfo named {} for mod file {}", name, e.getKey().getFilePath());
+                consumer.accept(packInfo);
             }
-            LOGGER.debug(CORE, "Generating PackInfo named {} for mod file {}", name, e.getKey().getFilePath());
-            consumer.accept(packInfo);
         }
     }
     

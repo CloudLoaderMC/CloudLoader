@@ -27,7 +27,7 @@ public final class SystemProperties {
 	public static final String GAME_JAR_PATH_CLIENT = "fabric.gameJarPath.client";
 	public static final String GAME_JAR_PATH_SERVER = "fabric.gameJarPath.server";
 	// set the game version for the builtin game mod/dependencies, bypassing auto-detection
-	public static final String GAME_VERSION = "fabric.gameVersion";
+	public static final String GAME_VERSION = "fml.mcVersion"; // fabric.gameVersion
 	// fallback log file for the builtin log handler (dumped on exit if not replaced with another handler)
 	public static final String LOG_FILE = "fabric.log.file";
 	// minimum log level for builtin log handler

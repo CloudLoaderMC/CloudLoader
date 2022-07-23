@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  * Implement this interface as a capability which should handle fluids, generally storing them in
  * one or more internal {@link IFluidTank} objects.
  * <p>
- * A reference implementation is provided {@link TileFluidHandler}.
+ * A reference implementation is provided {@link FluidHandlerBlockEntity}.
  */
 public interface IFluidHandler
 {

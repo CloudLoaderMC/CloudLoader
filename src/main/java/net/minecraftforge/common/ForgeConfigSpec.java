@@ -358,6 +358,7 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
         public <T> ConfigValue<T> defineInList(List<String> path, Supplier<T> defaultSupplier, Collection<? extends T> acceptableValues) {
             return define(path, defaultSupplier, acceptableValues::contains);
         }
+
         public <T> ConfigValue<List<? extends T>> defineList(String path, List<? extends T> defaultValue, Predicate<Object> elementValidator) {
             return defineList(split(path), defaultValue, elementValidator);
         }
@@ -386,7 +387,6 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
                 }
             }, defaultSupplier);
         }
-
         public <T> ConfigValue<List<? extends T>> defineListAllowEmpty(List<String> path, Supplier<List<? extends T>> defaultSupplier, Predicate<Object> elementValidator) {
             context.setClazz(List.class);
             return define(path, new ValueSpec(defaultSupplier, x -> x instanceof List && ((List<?>) x).stream().allMatch( elementValidator ), context) {
@@ -403,6 +403,55 @@ public class ForgeConfigSpec extends UnmodifiableConfigWrapper<UnmodifiableConfi
                         return getDefault();
                     }
                     return list;
+                }
+            }, defaultSupplier);
+        }
+
+        // Map
+        public <K, V> ConfigValue<Map<? extends K, ? extends V>> defineMap(String path, Map<? extends K, ? extends V> defaultValue, Predicate<Object> elementValidator) {
+            return defineMap(split(path), defaultValue, elementValidator);
+        }
+        public <K, V> ConfigValue<Map<? extends K, ? extends V>> defineMap(String path, Supplier<Map<? extends K, ? extends V>> defaultSupplier, Predicate<Object> elementValidator) {
+            return defineMap(split(path), defaultSupplier, elementValidator);
+        }
+        public <K, V> ConfigValue<Map<? extends K, ? extends V>> defineMap(List<String> path, Map<? extends K, ? extends V> defaultValue, Predicate<Object> elementValidator) {
+            return defineMap(path, () -> defaultValue, elementValidator);
+        }
+        public <K, V> ConfigValue<Map<? extends K, ? extends V>> defineMap(List<String> path, Supplier<Map<? extends K, ? extends V>> defaultSupplier, Predicate<Object> elementValidator) {
+            context.setClazz(Map.class);
+            return define(path, new ValueSpec(defaultSupplier, x -> x instanceof Map && ((Map<?, ?>) x).entrySet().stream().allMatch(elementValidator), context) {
+                @Override
+                public Object correct(Object value) {
+                    if (value == null || !(value instanceof Map) || ((Map<?, ?>)value).isEmpty()) {
+                        LogManager.getLogger().debug(CORE, "Map on key {} is deemed to need correction. It is null, not a list, or an empty list. Modders, consider defineMapAllowEmpty?", path.get(path.size() - 1));
+                        return getDefault();
+                    }
+                    Map<?, ?> map = Map.copyOf((Map<?, ?>) value);
+                    map.values().removeIf(elementValidator.negate());
+                    if (map.isEmpty()) {
+                        LogManager.getLogger().debug(CORE, "Map on key {} is deemed to need correction. It failed validation.", path.get(path.size() - 1));
+                        return getDefault();
+                    }
+                    return map;
+                }
+            }, defaultSupplier);
+        }
+        public <K, V> ConfigValue<Map<? extends K, ? extends V>> defineMapAllowEmpty(List<String> path, Supplier<Map<? extends K, ? extends V>> defaultSupplier, Predicate<Object> elementValidator) {
+            context.setClazz(Map.class);
+            return define(path, new ValueSpec(defaultSupplier, x -> x instanceof Map && ((Map<?, ?>) x).entrySet().stream().allMatch(elementValidator), context) {
+                @Override
+                public Object correct(Object value) {
+                    if (value == null || !(value instanceof Map)) {
+                        LogManager.getLogger().debug(CORE, "Map on key {} is deemed to need correction, as it is null or not a list.", path.get(path.size() - 1));
+                        return getDefault();
+                    }
+                    Map<?, ?> map = Map.copyOf((Map<?, ?>) value);
+                    map.values().removeIf(elementValidator.negate());
+                    if (map.isEmpty()) {
+                        LogManager.getLogger().debug(CORE, "Map on key {} is deemed to need correction. It failed validation.", path.get(path.size() - 1));
+                        return getDefault();
+                    }
+                    return map;
                 }
             }, defaultSupplier);
         }

@@ -18,6 +18,7 @@ import static net.minecraftforge.fml.loading.LogMarkers.CORE;
 public enum FMLPaths
 {
     GAMEDIR(),
+    // TODO: Per-version or configurable
     MODSDIR("mods"),
     CONFIGDIR("config"),
     FMLCONFIG(false, CONFIGDIR, "fml.toml");

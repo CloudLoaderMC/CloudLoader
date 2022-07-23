@@ -36,10 +36,10 @@ public class EntityAttributeModificationEvent extends Event implements IModBusEv
     {
         this.entityAttributes = mapIn;
         this.entityTypes = ImmutableList.copyOf(
-            ForgeRegistries.ENTITIES.getValues().stream()
-                .filter(DefaultAttributes::hasSupplier)
-                .map(entityType -> (EntityType<? extends LivingEntity>) entityType)
-                .collect(Collectors.toList())
+                ForgeRegistries.ENTITY_TYPES.getValues().stream()
+                        .filter(DefaultAttributes::hasSupplier)
+                        .map(entityType -> (EntityType<? extends LivingEntity>) entityType)
+                        .collect(Collectors.toList())
         );
     }
 

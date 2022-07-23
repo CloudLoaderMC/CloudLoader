@@ -63,7 +63,7 @@ import net.minecraftforge.registries.*;
 import net.minecraftforge.network.NetworkConstants;
 import net.minecraftforge.event.server.ServerStoppingEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.network.filters.VanillaPacketSplitter;
 import net.minecraftforge.server.command.EnumArgument;
 import net.minecraftforge.server.command.ModIdArgument;
@@ -78,7 +78,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.common.crafting.CompoundIngredient;
 import net.minecraftforge.common.crafting.ConditionalRecipe;
 import net.minecraftforge.common.crafting.CraftingHelper;
-import net.minecraftforge.common.crafting.NBTIngredient;
+import net.minecraftforge.common.crafting.StrictNBTIngredient;
 import net.minecraftforge.common.crafting.VanillaIngredientSerializer;
 import net.minecraftforge.common.crafting.conditions.AndCondition;
 import net.minecraftforge.common.crafting.conditions.FalseCondition;
@@ -161,51 +161,51 @@ public class ForgeMod
      * Stock biome modifier for adding features to biomes.
      */
     public static final RegistryObject<Codec<AddFeaturesBiomeModifier>> ADD_FEATURES_BIOME_MODIFIER_TYPE = BIOME_MODIFIER_SERIALIZERS.register("add_features", () ->
-        RecordCodecBuilder.create(builder -> builder.group(
-                Biome.LIST_CODEC.fieldOf("biomes").forGetter(AddFeaturesBiomeModifier::biomes),
-                PlacedFeature.LIST_CODEC.fieldOf("features").forGetter(AddFeaturesBiomeModifier::features),
-                Decoration.CODEC.fieldOf("step").forGetter(AddFeaturesBiomeModifier::step)
+            RecordCodecBuilder.create(builder -> builder.group(
+                    Biome.LIST_CODEC.fieldOf("biomes").forGetter(AddFeaturesBiomeModifier::biomes),
+                    PlacedFeature.LIST_CODEC.fieldOf("features").forGetter(AddFeaturesBiomeModifier::features),
+                    Decoration.CODEC.fieldOf("step").forGetter(AddFeaturesBiomeModifier::step)
             ).apply(builder, AddFeaturesBiomeModifier::new))
-        );
-    
+    );
+
     /**
      * Stock biome modifier for removing features from biomes.
      */
     public static final RegistryObject<Codec<RemoveFeaturesBiomeModifier>> REMOVE_FEATURES_BIOME_MODIFIER_TYPE = BIOME_MODIFIER_SERIALIZERS.register("remove_features", () ->
-        RecordCodecBuilder.create(builder -> builder.group(
-                Biome.LIST_CODEC.fieldOf("biomes").forGetter(RemoveFeaturesBiomeModifier::biomes),
-                PlacedFeature.LIST_CODEC.fieldOf("features").forGetter(RemoveFeaturesBiomeModifier::features),
-                new ExtraCodecs.EitherCodec<List<Decoration>, Decoration>(Decoration.CODEC.listOf(), Decoration.CODEC).<Set<Decoration>>xmap(
-                        either -> either.map(Set::copyOf, Set::of), // convert list/singleton to set when decoding
-                        set -> set.size() == 1 ? Either.right(set.toArray(Decoration[]::new)[0]) : Either.left(List.copyOf(set))
+            RecordCodecBuilder.create(builder -> builder.group(
+                    Biome.LIST_CODEC.fieldOf("biomes").forGetter(RemoveFeaturesBiomeModifier::biomes),
+                    PlacedFeature.LIST_CODEC.fieldOf("features").forGetter(RemoveFeaturesBiomeModifier::features),
+                    new ExtraCodecs.EitherCodec<List<Decoration>, Decoration>(Decoration.CODEC.listOf(), Decoration.CODEC).<Set<Decoration>>xmap(
+                            either -> either.map(Set::copyOf, Set::of), // convert list/singleton to set when decoding
+                            set -> set.size() == 1 ? Either.right(set.toArray(Decoration[]::new)[0]) : Either.left(List.copyOf(set))
                     ).optionalFieldOf("steps", EnumSet.allOf(Decoration.class)).forGetter(RemoveFeaturesBiomeModifier::steps)
             ).apply(builder, RemoveFeaturesBiomeModifier::new))
-        );
-    
+    );
+
     /**
      * Stock biome modifier for adding mob spawns to biomes.
      */
     public static final RegistryObject<Codec<AddSpawnsBiomeModifier>> ADD_SPAWNS_BIOME_MODIFIER_TYPE = BIOME_MODIFIER_SERIALIZERS.register("add_spawns", () ->
-        RecordCodecBuilder.create(builder -> builder.group(
-                Biome.LIST_CODEC.fieldOf("biomes").forGetter(AddSpawnsBiomeModifier::biomes),
-                // Allow either a list or single spawner, attempting to decode the list format first.
-                // Uses the better EitherCodec that logs both errors if both formats fail to parse.
-                new ExtraCodecs.EitherCodec<>(SpawnerData.CODEC.listOf(), SpawnerData.CODEC).xmap(
-                        either -> either.map(Function.identity(), List::of), // convert list/singleton to list when decoding
-                        list -> list.size() == 1 ? Either.right(list.get(0)) : Either.left(list) // convert list to singleton/list when encoding
+            RecordCodecBuilder.create(builder -> builder.group(
+                    Biome.LIST_CODEC.fieldOf("biomes").forGetter(AddSpawnsBiomeModifier::biomes),
+                    // Allow either a list or single spawner, attempting to decode the list format first.
+                    // Uses the better EitherCodec that logs both errors if both formats fail to parse.
+                    new ExtraCodecs.EitherCodec<>(SpawnerData.CODEC.listOf(), SpawnerData.CODEC).xmap(
+                            either -> either.map(Function.identity(), List::of), // convert list/singleton to list when decoding
+                            list -> list.size() == 1 ? Either.right(list.get(0)) : Either.left(list) // convert list to singleton/list when encoding
                     ).fieldOf("spawners").forGetter(AddSpawnsBiomeModifier::spawners)
             ).apply(builder, AddSpawnsBiomeModifier::new))
-        );
-    
+    );
+
     /**
      * Stock biome modifier for removing mob spawns from biomes.
      */
     public static final RegistryObject<Codec<RemoveSpawnsBiomeModifier>> REMOVE_SPAWNS_BIOME_MODIFIER_TYPE = BIOME_MODIFIER_SERIALIZERS.register("remove_spawns", () ->
-        RecordCodecBuilder.create(builder -> builder.group(
-                Biome.LIST_CODEC.fieldOf("biomes").forGetter(RemoveSpawnsBiomeModifier::biomes),
-                RegistryCodecs.homogeneousList(ForgeRegistries.Keys.ENTITY_TYPES).fieldOf("entity_types").forGetter(RemoveSpawnsBiomeModifier::entityTypes)
+            RecordCodecBuilder.create(builder -> builder.group(
+                    Biome.LIST_CODEC.fieldOf("biomes").forGetter(RemoveSpawnsBiomeModifier::biomes),
+                    RegistryCodecs.homogeneousList(ForgeRegistries.Keys.ENTITY_TYPES).fieldOf("entity_types").forGetter(RemoveSpawnsBiomeModifier::entityTypes)
             ).apply(builder, RemoveSpawnsBiomeModifier::new))
-        );
+    );
     /**
      * Noop structure modifier. Can be used in a structure modifier json with "type": "forge:none".
      */
@@ -371,6 +371,8 @@ public class ForgeMod
 
     public ForgeMod()
     {
+        CloudMod.getInstance();
+
         LOGGER.info(FORGEMOD,"Forge mod loading, version {}, for MC {} with MCP {}", ForgeVersion.getVersion(), MCPVersion.getMCVersion(), MCPVersion.getMCPVersion());
         INSTANCE = this;
         MinecraftForge.initialize();
@@ -535,7 +537,7 @@ public class ForgeMod
             CraftingHelper.register(TagEmptyCondition.Serializer.INSTANCE);
 
             CraftingHelper.register(new ResourceLocation("forge", "compound"), CompoundIngredient.Serializer.INSTANCE);
-            CraftingHelper.register(new ResourceLocation("forge", "nbt"), NBTIngredient.Serializer.INSTANCE);
+            CraftingHelper.register(new ResourceLocation("forge", "nbt"), StrictNBTIngredient.Serializer.INSTANCE);
             CraftingHelper.register(new ResourceLocation("forge", "partial_nbt"), PartialNBTIngredient.Serializer.INSTANCE);
             CraftingHelper.register(new ResourceLocation("forge", "difference"), DifferenceIngredient.Serializer.INSTANCE);
             CraftingHelper.register(new ResourceLocation("forge", "intersection"), IntersectionIngredient.Serializer.INSTANCE);

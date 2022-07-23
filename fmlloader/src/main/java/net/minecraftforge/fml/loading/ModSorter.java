@@ -9,6 +9,7 @@ import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.MutableGraph;
 import com.mojang.logging.LogUtils;
 import cpw.mods.jarhandling.SecureJar;
+import ml.darubyminer360.cloud.loading.LoadingConstants;
 import net.minecraftforge.fml.loading.moddiscovery.MinecraftLocator;
 import net.minecraftforge.forgespi.language.IModFileInfo;
 import net.minecraftforge.forgespi.language.IModInfo;
@@ -193,34 +194,122 @@ public class ModSorter
         final var modVersionDependencies = modFiles.stream()
                 .map(ModFile::getModInfos)
                 .<IModInfo>mapMulti(Iterable::forEach)
-                .collect(groupingBy(Function.identity(), flatMapping(e -> e.getDependencies().stream(), toList())));
+                .collect(groupingBy(Function.identity(), flatMapping(e -> e.getDependencies().stream().filter(IModInfo.ModVersion::isPositive), toList())));
+
+        final var modVersionConflicts = modFiles.stream()
+                .map(ModFile::getModInfos)
+                .<IModInfo>mapMulti(Iterable::forEach)
+                .collect(groupingBy(Function.identity(), flatMapping(e -> e.getDependencies().stream().filter(ver -> !ver.isPositive()), toList())));
 
         final var modRequirements = modVersionDependencies.values().stream()
                 .<IModInfo.ModVersion>mapMulti(Iterable::forEach)
                 .filter(mv -> mv.getSide().isCorrectSide())
                 .collect(toSet());
 
+        final var modConflicts = modVersionConflicts.values().stream()
+                .<IModInfo.ModVersion>mapMulti(Iterable::forEach)
+                .filter(mv -> mv.getSide().isCorrectSide())
+                .collect(toSet());
+
         final long mandatoryRequired = modRequirements.stream().filter(IModInfo.ModVersion::isMandatory).count();
+        final long mandatoryConflicts = modConflicts.stream().filter(IModInfo.ModVersion::isMandatory).count();
         LOGGER.debug(LOADING, "Found {} mod requirements ({} mandatory, {} optional)", modRequirements.size(), mandatoryRequired, modRequirements.size() - mandatoryRequired);
+        LOGGER.debug(LOADING, "Found {} mod conflicts ({} mandatory, {} optional)", modConflicts.size(), mandatoryConflicts, modConflicts.size() - mandatoryConflicts);
+        for (Iterator<IModInfo.ModVersion> i = modRequirements.iterator(); i.hasNext();) {
+            IModInfo.ModVersion element = i.next();
+            if (LoadingConstants.modIdAliases.containsKey(element.getModId())) {
+                for (String value : LoadingConstants.modIdAliases.get(element.getModId())) {
+                    if (modVersions.containsKey(value)) {
+                        i.remove();
+                        break;
+                    }
+                }
+            }
+            else {
+                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
+                    for (String value : pair.getValue()) {
+                        if (element.getModId().equals(value)) {
+                            if (modVersions.containsKey(pair.getKey())) {
+                                i.remove();
+                                break;
+                            }
+                            else {
+                                for (String v : pair.getValue()) {
+                                    if (modVersions.containsKey(v)) {
+                                        i.remove();
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        for (IModInfo.ModVersion ver : modConflicts) {
+            if (LoadingConstants.modIdAliases.containsKey(ver.getModId())) {
+                for (String value : LoadingConstants.modIdAliases.get(ver.getModId())) {
+                    modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), value, ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
+                }
+            }
+            else {
+                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
+                    modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), pair.getKey(), ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
+                    for (String value : pair.getValue()) {
+                        if (ver.getModId().equals(value)) {
+                            for (String v : pair.getValue()) {
+                                modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), v, ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
+                            }
+                        }
+                    }
+                }
+            }
+        }
         final var missingVersions = modRequirements.stream()
                 .filter(mv -> (mv.isMandatory() || modVersions.containsKey(mv.getModId())) && this.modVersionNotContained(mv, modVersions))
                 .collect(toSet());
+        // TODO: Test this!
+        final var conflictedVersions = modConflicts.stream()
+                .filter(mv -> (mv.isMandatory() || !modVersions.containsKey(mv.getModId())) && !this.modVersionNotContained(mv, modVersions))
+                .collect(toSet());
         final long mandatoryMissing = missingVersions.stream().filter(IModInfo.ModVersion::isMandatory).count();
+        final long foundMandatoryConflicts = conflictedVersions.stream().filter(IModInfo.ModVersion::isMandatory).count();
         LOGGER.debug(LOADING, "Found {} mod requirements missing ({} mandatory, {} optional)", missingVersions.size(), mandatoryMissing, missingVersions.size() - mandatoryMissing);
+        LOGGER.debug(LOADING, "{} mod conflicts were found ({} mandatory, {} optional)", conflictedVersions.size(), foundMandatoryConflicts, conflictedVersions.size() - foundMandatoryConflicts);
 
-        if (!missingVersions.isEmpty()) {
-            if (mandatoryMissing > 0) {
-                LOGGER.error(LOADING, "Missing mandatory dependencies: {}", missingVersions.stream().filter(IModInfo.ModVersion::isMandatory).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+        if (!missingVersions.isEmpty() || !conflictedVersions.isEmpty()) {
+            if (!missingVersions.isEmpty()) {
+                if (mandatoryMissing > 0) {
+                    LOGGER.error(LOADING, "Missing mandatory dependencies: {}", missingVersions.stream().filter(IModInfo.ModVersion::isMandatory).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+                }
+                if (missingVersions.size() - mandatoryMissing > 0) {
+                    LOGGER.error(LOADING, "Unsupported installed optional dependencies: {}", missingVersions.stream().filter(ver -> !ver.isMandatory()).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+                }
             }
-            if (missingVersions.size() - mandatoryMissing > 0) {
-                LOGGER.error(LOADING, "Unsupported installed optional dependencies: {}", missingVersions.stream().filter(ver -> !ver.isMandatory()).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+            if (!conflictedVersions.isEmpty()) {
+                if (foundMandatoryConflicts > 0) {
+                    LOGGER.error(LOADING, "Found breaking mod conflicts: {}", conflictedVersions.stream().filter(IModInfo.ModVersion::isMandatory).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+                }
+                if (conflictedVersions.size() - foundMandatoryConflicts > 0) {
+                    // TODO: Change message?
+                    LOGGER.error(LOADING, "Unsupported installed optional dependencies: {}", conflictedVersions.stream().filter(ver -> !ver.isMandatory()).map(IModInfo.ModVersion::getModId).collect(Collectors.joining(", ")));
+                }
             }
 
-            return missingVersions.stream()
-                    .map(mv -> new ExceptionData(mv.isMandatory() ? "fml.modloading.missingdependency" : "fml.modloading.missingdependency.optional",
-                            mv.getOwner(), mv.getModId(), mv.getOwner().getModId(), mv.getVersionRange(),
-                            modVersions.getOrDefault(mv.getModId(), new DefaultArtifactVersion("null"))))
-                    .toList();
+            return Stream.of(
+                            missingVersions.stream()
+                                    .map(mv -> new ExceptionData(mv.isMandatory() ? "fml.modloading.missingdependency" : "fml.modloading.missingdependency.optional",
+                                            mv.getOwner(), mv.getModId(), mv.getOwner().getModId(), mv.getVersionRange(),
+                                            modVersions.getOrDefault(mv.getModId(), new DefaultArtifactVersion("null"))))
+                                    .toList(),
+                            missingVersions.stream()
+                                    .map(mv -> new ExceptionData(mv.isMandatory() ? "fml.modloading.missingdependency" : "fml.modloading.missingdependency.optional",
+                                            mv.getOwner(), mv.getModId(), mv.getOwner().getModId(), mv.getVersionRange(),
+                                            modVersions.getOrDefault(mv.getModId(), new DefaultArtifactVersion("null"))))
+                                    .toList()
+                    )
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
         }
         return Collections.emptyList();
     }

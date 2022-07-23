@@ -16,13 +16,13 @@ pluginManagement {
 }
 
 rootProject.name = 'ForgeRoot'
+//rootProject.name = 'Cloud'
 
 include 'fmlloader'
 include 'fmlcore'
 include 'mclanguage'
 include 'javafmllanguage'
 include 'lowcodelanguage'
-include 'fabriclanguage'
 
 include ':mcp'
 include ':clean'

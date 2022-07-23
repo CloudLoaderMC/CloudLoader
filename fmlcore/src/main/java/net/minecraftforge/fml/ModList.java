@@ -5,6 +5,7 @@
 
 package net.minecraftforge.fml;
 
+import ml.darubyminer360.cloud.loading.LoadingConstants;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.forgespi.language.IModFileInfo;
@@ -17,16 +18,7 @@ import net.minecraftforge.forgespi.locating.IModFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CompletionStage;
@@ -169,7 +161,44 @@ public class ModList
 
     public Optional<? extends ModContainer> getModContainerById(String modId)
     {
-        return Optional.ofNullable(this.indexedMods.get(modId));
+        Optional<? extends ModContainer> mod = Optional.ofNullable(this.indexedMods.get(modId));
+        if (mod.isEmpty()) {
+            if (LoadingConstants.modIdAliases.containsKey(modId)) {
+                for (String value : LoadingConstants.modIdAliases.get(modId)) {
+                    if (indexedMods.containsKey(value)) {
+                        if (mod.isPresent()) {
+                            break;
+                        }
+                        mod = Optional.ofNullable(this.indexedMods.get(value));
+                    }
+                }
+            }
+            else {
+                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
+                    for (String value : pair.getValue()) {
+                        if (modId.equals(value)) {
+                            if (indexedMods.containsKey(pair.getKey())) {
+                                if (mod.isPresent()) {
+                                    break;
+                                }
+                                mod = Optional.ofNullable(this.indexedMods.get(value));
+                            }
+                            else {
+                                for (String v : pair.getValue()) {
+                                    if (indexedMods.containsKey(v)) {
+                                        if (mod.isPresent()) {
+                                            break;
+                                        }
+                                        mod = Optional.ofNullable(this.indexedMods.get(v));
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return mod;
     }
 
     public Optional<? extends ModContainer> getModContainerByObject(Object obj)
@@ -184,7 +213,44 @@ public class ModList
 
     public boolean isLoaded(String modTarget)
     {
-        return this.indexedMods.containsKey(modTarget);
+        boolean result = this.indexedMods.containsKey(modTarget);
+        if (!result) {
+            if (LoadingConstants.modIdAliases.containsKey(modTarget)) {
+                for (String value : LoadingConstants.modIdAliases.get(modTarget)) {
+                    if (indexedMods.containsKey(value)) {
+                        if (result) {
+                            break;
+                        }
+                        result = this.indexedMods.containsKey(value);
+                    }
+                }
+            }
+            else {
+                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
+                    for (String value : pair.getValue()) {
+                        if (modTarget.equals(value)) {
+                            if (indexedMods.containsKey(pair.getKey())) {
+                                if (result) {
+                                    break;
+                                }
+                                result = this.indexedMods.containsKey(value);
+                            }
+                            else {
+                                for (String v : pair.getValue()) {
+                                    if (indexedMods.containsKey(v)) {
+                                        if (result) {
+                                            break;
+                                        }
+                                        result = this.indexedMods.containsKey(v);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return result;
     }
 
     public int size()

@@ -40,6 +40,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -67,6 +69,8 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
     };
 
     private final Map<String, ModelGroup> parts = Maps.newHashMap();
+    private final Set<String> rootComponentNames = Collections.unmodifiableSet(parts.keySet());
+    private Set<String> allComponentNames;
 
     private final List<Vector3f> positions = Lists.newArrayList();
     private final List<Vec2> texCoords = Lists.newArrayList();
@@ -311,34 +315,34 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
     private static Vec2 parseVector2(String[] line)
     {
         return switch (line.length)
-        {
-            case 1 -> new Vec2(0, 0);
-            case 2 -> new Vec2(Float.parseFloat(line[1]), 0);
-            default -> new Vec2(Float.parseFloat(line[1]), Float.parseFloat(line[2]));
-        };
+                {
+                    case 1 -> new Vec2(0, 0);
+                    case 2 -> new Vec2(Float.parseFloat(line[1]), 0);
+                    default -> new Vec2(Float.parseFloat(line[1]), Float.parseFloat(line[2]));
+                };
     }
 
     private static Vector3f parseVector3(String[] line)
     {
         return switch (line.length)
-        {
-            case 1 -> new Vector3f(0, 0, 0);
-            case 2 -> new Vector3f(Float.parseFloat(line[1]), 0, 0);
-            case 3 -> new Vector3f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), 0);
-            default -> new Vector3f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]));
-        };
+                {
+                    case 1 -> new Vector3f(0, 0, 0);
+                    case 2 -> new Vector3f(Float.parseFloat(line[1]), 0, 0);
+                    case 3 -> new Vector3f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), 0);
+                    default -> new Vector3f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]));
+                };
     }
 
     static Vector4f parseVector4(String[] line)
     {
         return switch (line.length)
-        {
-            case 1 -> new Vector4f(0, 0, 0, 1);
-            case 2 -> new Vector4f(Float.parseFloat(line[1]), 0, 0, 1);
-            case 3 -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), 0, 1);
-            case 4 -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]), 1);
-            default -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]), Float.parseFloat(line[4]));
-        };
+                {
+                    case 1 -> new Vector4f(0, 0, 0, 1);
+                    case 2 -> new Vector4f(Float.parseFloat(line[1]), 0, 0, 1);
+                    case 3 -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), 0, 1);
+                    case 4 -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]), 1);
+                    default -> new Vector4f(Float.parseFloat(line[1]), Float.parseFloat(line[2]), Float.parseFloat(line[3]), Float.parseFloat(line[4]));
+                };
     }
 
     @Override
@@ -348,7 +352,7 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
             LOGGER.warn("Model \"" + modelLocation + "\" is using the deprecated \"" + entry.getKey() + "\" field in its OBJ model instead of \"" + entry.getValue() + "\". This field will be removed in 1.20.");
 
         parts.values().stream().filter(part -> owner.isComponentVisible(part.name(), true))
-             .forEach(part -> part.addQuads(owner, modelBuilder, bakery, spriteGetter, modelTransform, modelLocation));
+                .forEach(part -> part.addQuads(owner, modelBuilder, bakery, spriteGetter, modelTransform, modelLocation));
     }
 
     @Override
@@ -358,6 +362,22 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
         for (ModelGroup part : parts.values())
             combined.addAll(part.getTextures(context, modelGetter, missingTextureErrors));
         return combined;
+    }
+
+    public Set<String> getRootComponentNames()
+    {
+        return rootComponentNames;
+    }
+
+    @Override
+    public Set<String> getConfigurableComponentNames()
+    {
+        if (allComponentNames != null)
+            return allComponentNames;
+        var names = new HashSet<String>();
+        for (var group : parts.values())
+            group.addNamesRecursively(names);
+        return allComponentNames = Collections.unmodifiableSet(names);
     }
 
     private Pair<BakedQuad, Direction> makeQuad(int[][] indices, int tintIndex, Vector4f colorTint, Vector4f ambientColor, TextureAtlasSprite texture, Transformation transform)
@@ -447,50 +467,50 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
         if (automaticCulling)
         {
             if (Mth.equal(pos[0].x(), 0) && // vertex.position.x
-                Mth.equal(pos[1].x(), 0) &&
-                Mth.equal(pos[2].x(), 0) &&
-                Mth.equal(pos[3].x(), 0) &&
-                norm[0].x() < 0) // vertex.normal.x
+                    Mth.equal(pos[1].x(), 0) &&
+                    Mth.equal(pos[2].x(), 0) &&
+                    Mth.equal(pos[3].x(), 0) &&
+                    norm[0].x() < 0) // vertex.normal.x
             {
                 cull = Direction.WEST;
             }
             else if (Mth.equal(pos[0].x(), 1) && // vertex.position.x
-                     Mth.equal(pos[1].x(), 1) &&
-                     Mth.equal(pos[2].x(), 1) &&
-                     Mth.equal(pos[3].x(), 1) &&
-                     norm[0].x() > 0) // vertex.normal.x
+                    Mth.equal(pos[1].x(), 1) &&
+                    Mth.equal(pos[2].x(), 1) &&
+                    Mth.equal(pos[3].x(), 1) &&
+                    norm[0].x() > 0) // vertex.normal.x
             {
                 cull = Direction.EAST;
             }
             else if (Mth.equal(pos[0].z(), 0) && // vertex.position.z
-                     Mth.equal(pos[1].z(), 0) &&
-                     Mth.equal(pos[2].z(), 0) &&
-                     Mth.equal(pos[3].z(), 0) &&
-                     norm[0].z() < 0) // vertex.normal.z
+                    Mth.equal(pos[1].z(), 0) &&
+                    Mth.equal(pos[2].z(), 0) &&
+                    Mth.equal(pos[3].z(), 0) &&
+                    norm[0].z() < 0) // vertex.normal.z
             {
                 cull = Direction.NORTH; // can never remember
             }
             else if (Mth.equal(pos[0].z(), 1) && // vertex.position.z
-                     Mth.equal(pos[1].z(), 1) &&
-                     Mth.equal(pos[2].z(), 1) &&
-                     Mth.equal(pos[3].z(), 1) &&
-                     norm[0].z() > 0) // vertex.normal.z
+                    Mth.equal(pos[1].z(), 1) &&
+                    Mth.equal(pos[2].z(), 1) &&
+                    Mth.equal(pos[3].z(), 1) &&
+                    norm[0].z() > 0) // vertex.normal.z
             {
                 cull = Direction.SOUTH;
             }
             else if (Mth.equal(pos[0].y(), 0) && // vertex.position.y
-                     Mth.equal(pos[1].y(), 0) &&
-                     Mth.equal(pos[2].y(), 0) &&
-                     Mth.equal(pos[3].y(), 0) &&
-                     norm[0].y() < 0) // vertex.normal.z
+                    Mth.equal(pos[1].y(), 0) &&
+                    Mth.equal(pos[2].y(), 0) &&
+                    Mth.equal(pos[3].y(), 0) &&
+                    norm[0].y() < 0) // vertex.normal.z
             {
                 cull = Direction.DOWN; // can never remember
             }
             else if (Mth.equal(pos[0].y(), 1) && // vertex.position.y
-                     Mth.equal(pos[1].y(), 1) &&
-                     Mth.equal(pos[2].y(), 1) &&
-                     Mth.equal(pos[3].y(), 1) &&
-                     norm[0].y() > 0) // vertex.normal.y
+                    Mth.equal(pos[1].y(), 1) &&
+                    Mth.equal(pos[2].y(), 1) &&
+                    Mth.equal(pos[3].y(), 1) &&
+                    norm[0].y() > 0) // vertex.normal.y
             {
                 cull = Direction.UP;
             }
@@ -548,10 +568,15 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
         public Collection<Material> getTextures(IGeometryBakingContext owner, Function<ResourceLocation, UnbakedModel> modelGetter, Set<com.mojang.datafixers.util.Pair<String, String>> missingTextureErrors)
         {
             return meshes.stream()
-                         .flatMap(mesh -> mesh.mat != null
-                                 ? Stream.of(UnbakedGeometryHelper.resolveDirtyMaterial(mesh.mat.diffuseColorMap, owner))
-                                 : Stream.of())
-                         .collect(Collectors.toSet());
+                    .flatMap(mesh -> mesh.mat != null
+                            ? Stream.of(UnbakedGeometryHelper.resolveDirtyMaterial(mesh.mat.diffuseColorMap, owner))
+                            : Stream.of())
+                    .collect(Collectors.toSet());
+        }
+
+        protected void addNamesRecursively(Set<String> names)
+        {
+            names.add(name());
         }
     }
 
@@ -570,7 +595,7 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
             super.addQuads(owner, modelBuilder, bakery, spriteGetter, modelTransform, modelLocation);
 
             parts.values().stream().filter(part -> owner.isComponentVisible(part.name(), true))
-                 .forEach(part -> part.addQuads(owner, modelBuilder, bakery, spriteGetter, modelTransform, modelLocation));
+                    .forEach(part -> part.addQuads(owner, modelBuilder, bakery, spriteGetter, modelTransform, modelLocation));
         }
 
         @Override
@@ -594,6 +619,14 @@ public class ObjModel extends SimpleUnbakedGeometry<ObjModel>
             for (ModelObject part : parts.values())
                 combined.addAll(part.getTextures(owner, modelGetter, missingTextureErrors));
             return combined;
+        }
+
+        @Override
+        protected void addNamesRecursively(Set<String> names)
+        {
+            super.addNamesRecursively(names);
+            for (ModelObject object : parts.values())
+                object.addNamesRecursively(names);
         }
     }
 

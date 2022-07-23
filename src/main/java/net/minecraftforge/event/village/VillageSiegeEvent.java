@@ -27,16 +27,16 @@ import net.minecraftforge.eventbus.api.Event;
 public class VillageSiegeEvent extends Event
 {
     private final VillageSiege siege;
-    private final Level world;
+    private final Level level;
     private final Player player;
     private final Vec3 attemptedSpawnPos;
 
-    public VillageSiegeEvent(VillageSiege siege, Level world, Player player, Vec3 attemptedSpawnPos)
+    public VillageSiegeEvent(VillageSiege siege, Level level, Player player, Vec3 attemptedSpawnPos)
     {
-       this.siege = siege;
-       this.world = world;
-       this.player = player;
-       this.attemptedSpawnPos = attemptedSpawnPos;
+        this.siege = siege;
+        this.level = level;
+        this.player = player;
+        this.attemptedSpawnPos = attemptedSpawnPos;
     }
 
     public VillageSiege getSiege()
@@ -44,9 +44,9 @@ public class VillageSiegeEvent extends Event
         return siege;
     }
 
-    public Level getWorld()
+    public Level getLevel()
     {
-        return world;
+        return level;
     }
 
     public Player getPlayer()

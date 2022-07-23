@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
+import ml.darubyminer360.cloudloader.CloudVersion;
+import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraftforge.client.ForgeHooksClient;
@@ -31,13 +33,15 @@ public class BrandingControl
         if (brandings == null)
         {
             ImmutableList.Builder<String> brd = ImmutableList.builder();
+            brd.add("Fabric " + FabricLoaderImpl.VERSION);
             brd.add("Forge " + ForgeVersion.getVersion());
-            brd.add("Minecraft " + MCPVersion.getMCVersion());
+            brd.add("Cloud " + CloudVersion.getVersion());
             brd.add("MCP " + MCPVersion.getMCPVersion());
+            brd.add("Minecraft " + MCPVersion.getMCVersion());
             int tModCount = ModList.get().size();
             brd.add(ForgeI18n.parseMessage("fml.menu.loadingmods", tModCount));
             brandings = brd.build();
-            brandingsNoMC = brandings.subList(1, brandings.size());
+            brandingsNoMC = brandings.subList(3, brandings.size());
         }
     }
 
@@ -70,11 +74,11 @@ public class BrandingControl
     }
 
     public static String getClientBranding() {
-        return "forge";
+        return "Cloud";
     }
 
     public static String getServerBranding() {
-        return "forge";
+        return "Cloud";
     }
 
     public static ResourceManagerReloadListener resourceManagerReloadListener() {

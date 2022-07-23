@@ -52,15 +52,12 @@ public abstract class AbstractModProvider implements IModProvider
         }
         if (sj.moduleDataProvider().findFile(MODS_TOML).isPresent()) {
             LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", MODS_TOML, type, path);
-            System.out.println("Found " + MODS_TOML + " mod of type " + type + ": " + Arrays.toString(path));
             mod = new ModFile(sj, this, ModFileParser::modsTomlParser);
         } else if (sj.moduleDataProvider().findFile(FABRIC_MOD_JSON).isPresent()) {
             LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", FABRIC_MOD_JSON, type, path);
-            System.out.println("Found " + FABRIC_MOD_JSON + " mod of type " + type + ": " + Arrays.toString(path));
             mod = new ModFile(sj, this, ModFileParser::fabricModJsonParser);
         } else if (type != null) {
             LOGGER.debug(LogMarkers.SCAN, "Found {} mod of type {}: {}", MANIFEST, type, path);
-            System.out.println("Found " + MANIFEST + " mod of type " + type + ": " + Arrays.toString(path));
             mod = new ModFile(sj, this, this::manifestParser, type);
         } else {
             return new IModLocator.ModFileOrException(null, new ModFileLoadingException("Invalid mod file found "+ Arrays.toString(path)));

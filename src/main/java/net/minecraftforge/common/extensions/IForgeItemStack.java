@@ -49,24 +49,24 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
     }
 
     /**
-     * ItemStack sensitive version of getContainerItem. Returns a full ItemStack
-     * instance of the result.
+     * ItemStack sensitive version of {@link Item#getCraftingRemainingItem()}.
+     * Returns a full ItemStack instance of the result.
      *
      * @return The resulting ItemStack
      */
-    default ItemStack getContainerItem()
+    default ItemStack getCraftingRemainingItem()
     {
-        return self().getItem().getContainerItem(self());
+        return self().getItem().getCraftingRemainingItem(self());
     }
 
     /**
-     * ItemStack sensitive version of hasContainerItem
+     * ItemStack sensitive version of {@link Item#hasCraftingRemainingItem()}.
      *
-     * @return True if this item has a 'container'
+     * @return True if this item has a crafting remaining item
      */
-    default boolean hasContainerItem()
+    default boolean hasCraftingRemainingItem()
     {
-        return self().getItem().hasContainerItem(self());
+        return self().getItem().hasCraftingRemainingItem(self());
     }
 
     /**
@@ -81,21 +81,21 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
 
     default InteractionResult onItemUseFirst(UseOnContext context)
     {
-       Player entityplayer = context.getPlayer();
-       BlockPos blockpos = context.getClickedPos();
-       BlockInWorld blockworldstate = new BlockInWorld(context.getLevel(), blockpos, false);
-       Registry<Block> registry = entityplayer.level.registryAccess().registryOrThrow(Registry.BLOCK_REGISTRY);
-       if (entityplayer != null && !entityplayer.getAbilities().mayBuild && !self().hasAdventureModePlaceTagForBlock(registry, blockworldstate)) {
-          return InteractionResult.PASS;
-       } else {
-          Item item = self().getItem();
-          InteractionResult enumactionresult = item.onItemUseFirst(self(), context);
-          if (entityplayer != null && enumactionresult == InteractionResult.SUCCESS) {
-             entityplayer.awardStat(Stats.ITEM_USED.get(item));
-          }
+        Player entityplayer = context.getPlayer();
+        BlockPos blockpos = context.getClickedPos();
+        BlockInWorld blockworldstate = new BlockInWorld(context.getLevel(), blockpos, false);
+        Registry<Block> registry = entityplayer.level.registryAccess().registryOrThrow(Registry.BLOCK_REGISTRY);
+        if (entityplayer != null && !entityplayer.getAbilities().mayBuild && !self().hasAdventureModePlaceTagForBlock(registry, blockworldstate)) {
+            return InteractionResult.PASS;
+        } else {
+            Item item = self().getItem();
+            InteractionResult enumactionresult = item.onItemUseFirst(self(), context);
+            if (entityplayer != null && enumactionresult == InteractionResult.SUCCESS) {
+                entityplayer.awardStat(Stats.ITEM_USED.get(item));
+            }
 
-          return enumactionresult;
-       }
+            return enumactionresult;
+        }
     }
 
     default CompoundTag serializeNBT()
@@ -193,13 +193,13 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
     }
 
     /**
-     * ItemStack sensitive version of getItemEnchantability
+     * ItemStack sensitive version of {@link Item#getEnchantmentValue()}.
      *
-     * @return the item echantability value
+     * @return the enchantment value of this ItemStack
      */
-    default int getItemEnchantability()
+    default int getEnchantmentValue()
     {
-        return self().getItem().getItemEnchantability(self());
+        return self().getItem().getEnchantmentValue(self());
     }
 
     /**
@@ -279,9 +279,9 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
     }
 
     /**
-    * Determines the amount of durability the mending enchantment
-    * will repair, on average, per point of experience.
-    */
+     * Determines the amount of durability the mending enchantment
+     * will repair, on average, per point of experience.
+     */
     default float getXpRepairRatio()
     {
         return self().getItem().getXpRepairRatio(self());
@@ -428,7 +428,7 @@ public interface IForgeItemStack extends ICapabilitySerializable<CompoundTag>
             return other.isEmpty();
         else
             return !other.isEmpty() && self().getCount() == other.getCount() && self().getItem() == other.getItem() &&
-            (limitTags ? self().areShareTagsEqual(other) : ItemStack.tagMatches(self(), other));
+                    (limitTags ? self().areShareTagsEqual(other) : ItemStack.tagMatches(self(), other));
     }
 
     /**

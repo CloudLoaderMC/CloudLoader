@@ -19,10 +19,12 @@ import java.util.stream.Collectors;
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.client.renderer.GameRenderer;
+import net.minecraftforge.client.ConfigScreenHandler;
 import net.minecraftforge.client.gui.widget.ModListWidget;
 import net.minecraftforge.client.gui.widget.ScrollPanel;
 import net.minecraftforge.fml.loading.moddiscovery.ModFileInfo;
-import net.minecraftforge.resource.PathResourcePack;
+import net.minecraftforge.forgespi.language.ModLoaderType;
+import net.minecraftforge.resource.PathPackResources;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -50,7 +52,6 @@ import net.minecraftforge.common.util.MavenVersionStringHelper;
 import net.minecraftforge.fml.ModContainer;
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
-import net.minecraftforge.client.ConfigGuiHandler;
 import net.minecraftforge.fml.loading.FMLPaths;
 import net.minecraftforge.fml.loading.StringUtils;
 import net.minecraftforge.resource.ResourcePackLoader;
@@ -60,6 +61,9 @@ import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.Style;
 
+// TODO: When implementing component-swapping/reimplementation functionality, add a check for if Mod Menu for Fabric is installed, and if it is, call the correct methods instead of the code in the methods below.
+// For future reference, the packages are io.github.prospector.modmenu.gui.ModsScreen (<1.16) and com.terraformersmc.modmenu.gui.ModsScreen (>1.15).
+// We could just open that screen from the mods button but that messes up other mods that rely on it being ModListScreen like Catalogue by MrCrayfish.
 public class ModListScreen extends Screen
 {
     private static String stripControlCodes(String value) { return net.minecraft.util.StringUtil.stripColor(value); }
@@ -302,7 +306,7 @@ public class ModListScreen extends Screen
         if (selected == null) return;
         try
         {
-            ConfigGuiHandler.getGuiFactoryFor(selected.getInfo()).map(f->f.apply(this.minecraft, this)).ifPresent(newScreen -> this.minecraft.setScreen(newScreen));
+            ConfigScreenHandler.getScreenFactoryFor(selected.getInfo()).map(f->f.apply(this.minecraft, this)).ifPresent(newScreen -> this.minecraft.setScreen(newScreen));
         }
         catch (final Exception e)
         {
@@ -398,7 +402,7 @@ public class ModListScreen extends Screen
             return;
         }
         IModInfo selectedMod = selected.getInfo();
-        this.configButton.active = ConfigGuiHandler.getGuiFactoryFor(selectedMod).isPresent();
+        this.configButton.active = ConfigScreenHandler.getScreenFactoryFor(selectedMod).isPresent();
         List<String> lines = new ArrayList<>();
         VersionChecker.CheckResult vercheck = VersionChecker.getResult(selectedMod);
 
@@ -406,13 +410,19 @@ public class ModListScreen extends Screen
         Pair<ResourceLocation, Size2i> logoData = selectedMod.getLogoFile().map(logoFile->
         {
             TextureManager tm = this.minecraft.getTextureManager();
-            final PathResourcePack resourcePack = ResourcePackLoader.getPackFor(selectedMod.getModId())
+            final PathPackResources resourcePack = ResourcePackLoader.getPackFor(selectedMod.getModId())
                     .orElse(ResourcePackLoader.getPackFor("forge").
                             orElseThrow(()->new RuntimeException("Can't find forge, WHAT!")));
             try
             {
                 NativeImage logo = null;
-                InputStream logoResource = resourcePack.getRootResource(logoFile);
+                InputStream logoResource;
+                if (selectedMod.getOwningFile().getNativeLoader() == ModLoaderType.FORGE) {
+                    logoResource = resourcePack.getRootResource(logoFile);
+                }
+                else {
+                    logoResource = resourcePack.getPathResource(logoFile);
+                }
                 if (logoResource != null)
                     logo = NativeImage.read(logoResource);
                 if (logo != null)

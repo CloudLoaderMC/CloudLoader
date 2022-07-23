@@ -41,7 +41,7 @@ import net.minecraftforge.common.data.ExistingFileHelper;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.RegistryObject;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -201,13 +201,13 @@ public class NewModelLoaderTest
                     .texture("layer0", "minecraft:item/coal")
                     .texture("layer1", "minecraft:item/stick")
                     .customLoader(ItemLayersModelBuilder::begin)
-                        .emissive(1)
+                    .emissive(1)
                     .end();
             withExistingParent(NewModelLoaderTest.separate_perspective.getId().getPath(), "forge:item/default")
                     .customLoader(SeparateTransformsModelBuilder::begin)
-                        .base(nested().parent(getExistingFile(mcLoc("minecraft:item/coal"))))
-                        .perspective(ItemTransforms.TransformType.GUI, nested().parent(getExistingFile(mcLoc("minecraft:item/snowball"))))
-                        .perspective(ItemTransforms.TransformType.FIRST_PERSON_LEFT_HAND, nested().parent(getExistingFile(mcLoc("minecraft:item/bone"))))
+                    .base(nested().parent(getExistingFile(mcLoc("minecraft:item/coal"))))
+                    .perspective(ItemTransforms.TransformType.GUI, nested().parent(getExistingFile(mcLoc("minecraft:item/snowball"))))
+                    .perspective(ItemTransforms.TransformType.FIRST_PERSON_LEFT_HAND, nested().parent(getExistingFile(mcLoc("minecraft:item/bone"))))
                     .end();
         }
     }
@@ -225,24 +225,24 @@ public class NewModelLoaderTest
             BlockModelBuilder model = models()
                     .getBuilder(NewModelLoaderTest.obj_block.getId().getPath())
                     .customLoader(ObjModelBuilder::begin)
-                            .modelLocation(new ResourceLocation("new_model_loader_test:models/item/sugar_glider.obj"))
-                            .flipV(true)
+                    .modelLocation(new ResourceLocation("new_model_loader_test:models/item/sugar_glider.obj"))
+                    .flipV(true)
                     .end()
                     .texture("qr", "minecraft:block/oak_planks")
                     .texture("particle", "#qr");
             getVariantBuilder(NewModelLoaderTest.obj_block.get())
                     .partialState()
-                            .with(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST)
-                            .addModels(new ConfiguredModel(model, 0, 90, false))
+                    .with(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST)
+                    .addModels(new ConfiguredModel(model, 0, 90, false))
                     .partialState()
-                            .with(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST)
-                            .addModels(new ConfiguredModel(model, 0, 270, false))
+                    .with(BlockStateProperties.HORIZONTAL_FACING, Direction.WEST)
+                    .addModels(new ConfiguredModel(model, 0, 270, false))
                     .partialState()
-                            .with(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
-                            .addModels(new ConfiguredModel(model))
+                    .with(BlockStateProperties.HORIZONTAL_FACING, Direction.NORTH)
+                    .addModels(new ConfiguredModel(model))
                     .partialState()
-                            .with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH)
-                            .addModels(new ConfiguredModel(model, 0, 180, false))
+                    .with(BlockStateProperties.HORIZONTAL_FACING, Direction.SOUTH)
+                    .addModels(new ConfiguredModel(model, 0, 180, false))
                     .partialState();
         }
     }

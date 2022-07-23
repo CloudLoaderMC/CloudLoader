@@ -33,9 +33,10 @@ import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.fabricmc.loader.impl.discovery.ModCandidate;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
 public final class MetadataVerifier {
-	private static final Pattern MOD_ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{1,63}");
+	public static final Pattern MOD_ID_PATTERN = Pattern.compile("[a-z][a-z0-9-_]{1,63}");
 
 	public static ModCandidate verifyIndev(ModCandidate mod) {
 		if (FabricLoaderImpl.INSTANCE.isDevelopmentEnvironment()) {

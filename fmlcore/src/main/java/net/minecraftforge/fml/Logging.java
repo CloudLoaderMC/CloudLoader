@@ -17,6 +17,7 @@ public class Logging
     public static final Marker SPLASH = MarkerManager.getMarker("SPLASH");
     public static final Marker CAPABILITIES = MarkerManager.getMarker("CAPABILITIES");
     public static final Marker MODELLOADING = MarkerManager.getMarker("MODELLOADING");
+    public static final Marker CLOUDMOD = MarkerManager.getMarker("CLOUDMOD").addParents(LOADING);
     public static final Marker FORGEMOD = MarkerManager.getMarker("FORGEMOD").addParents(LOADING);
 
     // --log CORE:+DEBUG,SCAN:-OFF

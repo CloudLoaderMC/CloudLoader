@@ -30,7 +30,7 @@ import net.minecraftforge.common.world.StructureModifier;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import net.minecraftforge.forge.event.lifecycle.GatherDataEvent;
+import net.minecraftforge.data.event.GatherDataEvent;
 import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.ForgeRegistries.Keys;
@@ -83,14 +83,14 @@ public class StructureModifierTest
 
         // prepare to datagenerate our structure modifier
         final StructureModifier structureModifier = new TestModifier(
-              HolderSet.direct(ops.registry(Registry.STRUCTURE_REGISTRY).get().getHolder(BuiltinStructures.STRONGHOLD).orElseThrow()),
-              MobCategory.MONSTER,
-              new MobSpawnSettings.SpawnerData(EntityType.WITHER_SKELETON, 100, 5, 15)
+                HolderSet.direct(ops.registry(Registry.STRUCTURE_REGISTRY).get().getHolder(BuiltinStructures.STRONGHOLD).orElseThrow()),
+                MobCategory.MONSTER,
+                new MobSpawnSettings.SpawnerData(EntityType.WITHER_SKELETON, 100, 5, 15)
         );
 
-         DataProvider structureModifierProvider =
-              JsonCodecProvider.forDatapackRegistry(generator, event.getExistingFileHelper(), MODID, ops, ForgeRegistries.Keys.STRUCTURE_MODIFIERS,
-                    Map.of(MODIFY_STRONGHOLD_RL, structureModifier));
+        DataProvider structureModifierProvider =
+                JsonCodecProvider.forDatapackRegistry(generator, event.getExistingFileHelper(), MODID, ops, ForgeRegistries.Keys.STRUCTURE_MODIFIERS,
+                        Map.of(MODIFY_STRONGHOLD_RL, structureModifier));
         generator.addProvider(event.includeServer(), structureModifierProvider);
     }
 
@@ -105,8 +105,8 @@ public class StructureModifierTest
             if (phase == Phase.ADD && this.structures.contains(structure))
             {
                 builder.getStructureSettings()
-                      .getOrAddSpawnOverrides(category)
-                      .addSpawn(spawn);
+                        .getOrAddSpawnOverrides(category)
+                        .addSpawn(spawn);
             }
         }
 
@@ -119,9 +119,9 @@ public class StructureModifierTest
         private static Codec<TestModifier> makeCodec()
         {
             return RecordCodecBuilder.create(builder -> builder.group(
-                  STRUCTURE_LIST_CODEC.fieldOf("structures").forGetter(TestModifier::structures),
-                  MobCategory.CODEC.fieldOf("category").forGetter(TestModifier::category),
-                  MobSpawnSettings.SpawnerData.CODEC.fieldOf("spawn").forGetter(TestModifier::spawn)
+                    STRUCTURE_LIST_CODEC.fieldOf("structures").forGetter(TestModifier::structures),
+                    MobCategory.CODEC.fieldOf("category").forGetter(TestModifier::category),
+                    MobSpawnSettings.SpawnerData.CODEC.fieldOf("spawn").forGetter(TestModifier::spawn)
             ).apply(builder, TestModifier::new));
         }
     }

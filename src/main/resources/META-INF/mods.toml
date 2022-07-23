@@ -5,14 +5,27 @@ logoFile="forge_logo.png"
 license="LGPL v2.1"
 
 [[mods]]
-    modId="forge"
-    # We use the global forge version
-    version="${global.forgeVersion}"
-    updateJSONURL="https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
-    displayName="Forge"
-    credits="Anyone who has contributed on Github and supports our development"
-    authors="LexManos,cpw"
-    description='''
+modId="forge"
+# We use the global forge version
+version="${global.forgeVersion}"
+updateJSONURL="https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json"
+displayName="Forge"
+credits="Anyone who has contributed to Forge on Github and supports their development"
+authors="LexManos,cpw"
+description='''
     Forge, a broad compatibility API.
     '''
-    
+[[mods]]
+modId="cloudloader"
+# We use the global Cloud version
+# TODO: Automate this
+#version="${global.cloudVersion}"
+# TODO: Change this to 1.0.0 when it comes time to release Cloud
+version="41.0.0"
+updateJSONURL="https://cloudmc.ml/files/promotions_slim.json"
+displayName="Cloud"
+credits="Anyone who has contributed on Github and supports our development"
+authors="DaRubyMiner360"
+description='''
+    The Cloud mod loader.
+    '''

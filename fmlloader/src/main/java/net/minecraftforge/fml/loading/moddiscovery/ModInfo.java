@@ -8,6 +8,7 @@ package net.minecraftforge.fml.loading.moddiscovery;
 import com.mojang.logging.LogUtils;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
+import net.fabricmc.loader.impl.metadata.MetadataVerifier;
 import net.fabricmc.loader.impl.util.version.VersionPredicateParser;
 import net.minecraftforge.fml.loading.StringSubstitutor;
 import net.minecraftforge.fml.loading.StringUtils;
@@ -31,9 +32,9 @@ public class ModInfo implements IModInfo, IConfigurable
 {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final DefaultArtifactVersion DEFAULT_VERSION = new DefaultArtifactVersion("1");
-    private static final Pattern VALID_MODID = Pattern.compile("^[a-z][a-z0-9_]{1,63}$");
-    private static final Pattern VALID_NAMESPACE = Pattern.compile("^[a-z][a-z0-9_.-]{1,63}$");
-    private static final Pattern VALID_VERSION = Pattern.compile("^\\d+.*");
+    public static final Pattern VALID_MODID = Pattern.compile("^[a-z][a-z0-9_]{1,63}$");
+    public static final Pattern VALID_NAMESPACE = Pattern.compile("^[a-z][a-z0-9_.-]{1,63}$");
+    public static final Pattern VALID_VERSION = Pattern.compile("^\\d+.*");
 
     private final ModFileInfo owningFile;
     private final String modId;
@@ -64,14 +65,20 @@ public class ModInfo implements IModInfo, IConfigurable
         }
         else {
             this.modId = config.<String>getConfigElement("id")
-                    .orElseThrow(() -> new InvalidModFileException("Missing id", owningFile));
+                    .orElseThrow(() -> new InvalidModFileException("Missing id", owningFile)).replace("-", "_");
         }
-        if (!VALID_MODID.matcher(this.modId).matches()) {
+
+        if (owningFile.getNativeLoader() == ModLoaderType.FORGE && !VALID_MODID.matcher(this.modId).matches()) {
             LOGGER.error(LogUtils.FATAL_MARKER, "Invalid modId found in file {} - {} does not match the standard: {}", this.owningFile.getFile().getFilePath(), this.modId, VALID_MODID.pattern());
             throw new InvalidModFileException("Invalid modId found : " + this.modId, owningFile);
         }
+        else if (owningFile.getNativeLoader() == ModLoaderType.FABRIC && !MetadataVerifier.MOD_ID_PATTERN.matcher(this.modId).matches()) {
+            LOGGER.error(LogUtils.FATAL_MARKER, "Invalid modId found in file {} - {} does not match the standard: {}", this.owningFile.getFile().getFilePath(), this.modId, MetadataVerifier.MOD_ID_PATTERN.pattern());
+            throw new InvalidModFileException("Invalid modId found : " + this.modId, owningFile);
+        }
+
         this.namespace = config.<String>getConfigElement("namespace").orElse(this.modId);
-        if (!VALID_NAMESPACE.matcher(this.namespace).matches()) {
+        if (this.owningFile.getNativeLoader() == ModLoaderType.FORGE && !VALID_NAMESPACE.matcher(this.namespace).matches()) {
             LOGGER.error(LogUtils.FATAL_MARKER, "Invalid override namespace found in file {} - {} does not match the standard: {}", this.owningFile.getFile().getFilePath(), this.namespace, VALID_NAMESPACE.pattern());
             throw new InvalidModFileException("Invalid override namespace found : " + this.namespace, owningFile);
         }
@@ -127,17 +134,27 @@ public class ModInfo implements IModInfo, IConfigurable
             this.dependencies = Stream.of(
                             ownFile.map(mfi -> mfi.<Map.Entry<String, Object>>getConfigElement("depends", this.modId)
                                             .stream()
-                                            .map(dep -> new ModVersion(this, dep, true))
+                                            .map(dep -> new ModVersion(this, dep, true, true))
                                             .collect(Collectors.toList()))
                                     .orElse(Collections.emptyList()),
                             ownFile.map(mfi -> mfi.<Map.Entry<String, Object>>getConfigElement("recommends", this.modId)
                                             .stream()
-                                            .map(dep -> new ModVersion(this, dep, false))
+                                            .map(dep -> new ModVersion(this, dep, false, true))
                                             .collect(Collectors.toList()))
                                     .orElse(Collections.emptyList()),
                             ownFile.map(mfi -> mfi.<Map.Entry<String, Object>>getConfigElement("suggests", this.modId)
                                             .stream()
-                                            .map(dep -> new ModVersion(this, dep, false))
+                                            .map(dep -> new ModVersion(this, dep, false, true))
+                                            .collect(Collectors.toList()))
+                                    .orElse(Collections.emptyList()),
+                            ownFile.map(mfi -> mfi.<Map.Entry<String, Object>>getConfigElement("conflicts", this.modId)
+                                            .stream()
+                                            .map(dep -> new ModVersion(this, dep, false, true))
+                                            .collect(Collectors.toList()))
+                                    .orElse(Collections.emptyList()),
+                            ownFile.map(mfi -> mfi.<Map.Entry<String, Object>>getConfigElement("breaks", this.modId)
+                                            .stream()
+                                            .map(dep -> new ModVersion(this, dep, true, true))
                                             .collect(Collectors.toList()))
                                     .orElse(Collections.emptyList())
                     )
@@ -258,10 +275,11 @@ public class ModInfo implements IModInfo, IConfigurable
         return modUrl;
     }
 
-    class ModVersion implements net.minecraftforge.forgespi.language.IModInfo.ModVersion {
+    public class ModVersion implements net.minecraftforge.forgespi.language.IModInfo.ModVersion {
         private IModInfo owner;
         private final String modId;
         private final VersionRange versionRange;
+        private final boolean positive;
         private final boolean mandatory;
         private final Ordering ordering;
         private final DependencySide side;
@@ -273,6 +291,7 @@ public class ModInfo implements IModInfo, IConfigurable
                     .orElseThrow(()->new InvalidModFileException("Missing required field modid in dependency", getOwningFile()));
             this.mandatory = config.<Boolean>getConfigElement("mandatory")
                     .orElseThrow(()->new InvalidModFileException("Missing required field mandatory in dependency", getOwningFile()));
+            this.positive = true;
             this.versionRange = config.<String>getConfigElement("versionRange")
                     .map(MavenVersionAdapter::createFromVersionSpec)
                     .orElse(UNBOUNDED);
@@ -286,10 +305,11 @@ public class ModInfo implements IModInfo, IConfigurable
                     .map(StringUtils::toURL);
         }
 
-        public ModVersion(final IModInfo owner, final Map.Entry<String, Object> config, final boolean mandatory) {
+        public ModVersion(final IModInfo owner, final Map.Entry<String, Object> config, final boolean mandatory, final boolean positive) {
             this.owner = owner;
             this.modId = config.getKey();
             this.mandatory = mandatory;
+            this.positive = positive;
             this.versionRange = Optional.of((String) config.getValue())
                     .map((spec) -> {
                         VersionRange result;
@@ -300,17 +320,40 @@ public class ModInfo implements IModInfo, IConfigurable
                         }
                         return result;
                     }).orElse(UNBOUNDED);
-//            this.versionRange = config.<String>getConfigElement("versionRange")
-//                    .map(MavenVersionAdapter::createFromVersionSpec)
-//                    .orElse(UNBOUNDED);
-//            this.versionRange = Optional.of((String) config.getValue())
-//                    .map(MavenVersionAdapter::createFromVersionSpec)
-//                    .orElse(UNBOUNDED);
             this.ordering = Ordering.NONE;
             this.side = DependencySide.BOTH;
             this.referralUrl = Optional.empty();
         }
 
+        public ModVersion(final IModInfo owner, final String modId, final VersionRange versionRange, final boolean mandatory, final boolean positive) {
+            this.owner = owner;
+            this.modId = modId;
+            this.mandatory = mandatory;
+            this.positive = positive;
+            this.versionRange = Optional.of(versionRange).orElse(UNBOUNDED);
+            this.ordering = Ordering.NONE;
+            this.side = DependencySide.BOTH;
+            this.referralUrl = Optional.empty();
+        }
+
+        public ModVersion(final IModInfo owner, final String modId, final VersionRange versionRange, final boolean mandatory, final boolean positive, final Ordering ordering, final DependencySide side, final URL referralUrl) {
+            this.owner = owner;
+            this.modId = modId;
+            this.mandatory = mandatory;
+            this.positive = positive;
+            this.versionRange = Optional.of(versionRange).orElse(UNBOUNDED);
+            this.ordering = ordering;
+            this.side = side;
+            this.referralUrl = Optional.ofNullable(referralUrl);
+        }
+
+        public ModVersion build(final IModInfo owner, final String modId, final VersionRange versionRange, final boolean mandatory, final boolean positive) {
+            return new ModVersion(owner, modId, versionRange, mandatory, positive);
+        }
+
+        public ModVersion build(final IModInfo owner, final String modId, final VersionRange versionRange, final boolean mandatory, final boolean positive, final Ordering ordering, final DependencySide side, final URL referralUrl) {
+            return new ModVersion(owner, modId, versionRange, mandatory, positive, ordering, side, referralUrl);
+        }
 
         @Override
         public String getModId()
@@ -328,6 +371,12 @@ public class ModInfo implements IModInfo, IConfigurable
         public boolean isMandatory()
         {
             return mandatory;
+        }
+
+        @Override
+        public boolean isPositive()
+        {
+            return positive;
         }
 
         @Override

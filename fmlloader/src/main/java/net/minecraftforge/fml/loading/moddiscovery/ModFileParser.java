@@ -54,9 +54,12 @@ public class ModFileParser {
         final FileConfig fileConfig = FileConfig.builder(modsjson).build();
         fileConfig.load();
         fileConfig.close();
-//        fileConfig.set("modLoader", "javafml");
-        fileConfig.set("modLoader", "fabricfml");
-        fileConfig.set("loaderVersion", "[41,)");
+        if (!fileConfig.contains("modLoader")) {
+            fileConfig.set("modLoader", "lowcodefml");
+        }
+        if (!fileConfig.contains("loaderVersion")) {
+            fileConfig.set("loaderVersion", "[41,)");
+        }
         final NightConfigWrapper configWrapper = new NightConfigWrapper(fileConfig);
 
         VersionOverrides versionOverrides = new VersionOverrides();

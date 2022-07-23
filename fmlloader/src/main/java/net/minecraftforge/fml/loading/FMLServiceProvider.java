@@ -6,6 +6,7 @@
 package net.minecraftforge.fml.loading;
 
 import com.mojang.logging.LogUtils;
+import cpw.mods.modlauncher.ArgumentHandler;
 import cpw.mods.modlauncher.api.*;
 import joptsimple.ArgumentAcceptingOptionSpec;
 import joptsimple.OptionSpecBuilder;
@@ -69,6 +70,7 @@ public class FMLServiceProvider implements ITransformationService
         arguments.put("modLists", modListsArgumentList);
         arguments.put("mods", modsArgumentList);
         arguments.put("mavenRoots", mavenRootsArgumentList);
+        // TODO: Add Cloud here
         arguments.put("forgeVersion", targetForgeVersion);
         arguments.put("forgeGroup", targetForgeGroup);
         arguments.put("mcVersion", targetMcVersion);
@@ -92,17 +94,18 @@ public class FMLServiceProvider implements ITransformationService
     }
 
     @Override
-    public void onLoad(IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException
+    public void onLoad(ArgumentHandler argumentHandler, IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException
     {
 //        LOGGER.debug("Injecting tracing printstreams for STDOUT/STDERR.");
 //        System.setOut(new TracingPrintStream(LogManager.getLogger("STDOUT"), System.out));
 //        System.setErr(new TracingPrintStream(LogManager.getLogger("STDERR"), System.err));
-        FMLLoader.onInitialLoad(environment, otherServices);
+        FMLLoader.onInitialLoad(argumentHandler, environment, otherServices);
     }
 
     @Override
     public void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder)
     {
+        // TODO: Add Cloud here
         forgeOption = argumentBuilder.apply("forgeVersion", "Forge Version number").withRequiredArg().ofType(String.class).required();
         forgeGroupOption = argumentBuilder.apply("forgeGroup", "Forge Group (for testing)").withRequiredArg().ofType(String.class).defaultsTo("net.minecraftforge");
         mcOption = argumentBuilder.apply("mcVersion", "Minecraft Version number").withRequiredArg().ofType(String.class).required();

@@ -23,13 +23,12 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-/** Ingredient that matches the given items, performing a partial NBT match. Use {@link NBTIngredient} if you want exact match on NBT */
+/** Ingredient that matches the given items, performing a partial NBT match. Use {@link StrictNBTIngredient} if you want exact match on NBT */
 public class PartialNBTIngredient extends AbstractIngredient
 {
     private final Set<Item> items;
@@ -38,12 +37,12 @@ public class PartialNBTIngredient extends AbstractIngredient
     protected PartialNBTIngredient(Set<Item> items, CompoundTag nbt)
     {
         super(items.stream().map(item ->
-            {
-                ItemStack stack = new ItemStack(item);
-                // copy NBT to prevent the stack from modifying the original, as capabilities or vanilla item durability will modify the tag
-                stack.setTag(nbt.copy());
-                return new Ingredient.ItemValue(stack);
-            }));
+        {
+            ItemStack stack = new ItemStack(item);
+            // copy NBT to prevent the stack from modifying the original, as capabilities or vanilla item durability will modify the tag
+            stack.setTag(nbt.copy());
+            return new Ingredient.ItemValue(stack);
+        }));
         if (items.isEmpty())
         {
             throw new IllegalArgumentException("Cannot create a PartialNBTIngredient with no items");
