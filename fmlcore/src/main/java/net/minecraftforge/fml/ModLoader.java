@@ -103,6 +103,7 @@ public class ModLoader
                 .collect(Collectors.toList());
         FMLLoader.getLoadingModList().getModFiles().stream()
                 .filter(ModFileInfo::missingLicense)
+                .filter(modFileInfo -> modFileInfo.getNativeLoader() == ModLoaderType.FORGE)
                 .filter(modFileInfo -> modFileInfo.getMods().stream().noneMatch(thisModInfo -> this.loadingExceptions.stream().map(ModLoadingException::getModInfo).anyMatch(otherInfo -> otherInfo == thisModInfo))) //Ignore files where any other mod already encountered an error
                 .map(modFileInfo -> new ModLoadingException(null, ModLoadingStage.VALIDATE, "fml.modloading.missinglicense", null, modFileInfo.getFile()))
                 .forEach(this.loadingExceptions::add);

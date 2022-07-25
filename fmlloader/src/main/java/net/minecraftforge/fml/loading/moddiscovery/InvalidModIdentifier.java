@@ -22,8 +22,7 @@ public enum InvalidModIdentifier {
     OLDFORGE(filePresent("mcmod.info")),
     // Commented out since Fabric mod support is included
     //FABRIC(filePresent("fabric.mod.json")),
-    // Can't be supported yet since Quilt and Fabric are too similar at the moment
-    QUILT(filePresent("quilt.mod.json")),
+    //QUILT(filePresent("quilt.mod.json")),
     LITELOADER(filePresent("litemod.json")),
     OPTIFINE(filePresent("optifine/Installer.class")),
     BUKKIT(filePresent("plugin.yml")),

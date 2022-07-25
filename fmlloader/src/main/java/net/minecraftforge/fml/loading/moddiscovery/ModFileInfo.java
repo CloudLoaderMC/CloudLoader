@@ -156,6 +156,9 @@ public class ModFileInfo implements IModFileInfo, IConfigurable
         if (Files.exists(modFile.findResource("fabric.mod.json"))) {
             return ModLoaderType.FABRIC;
         }
+        if (Files.exists(modFile.findResource("quilt.mod.json"))) {
+            return ModLoaderType.QUILT;
+        }
         return ModLoaderType.FORGE;
     }
 

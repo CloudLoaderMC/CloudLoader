@@ -16,6 +16,7 @@
 
 package net.fabricmc.loader.impl.game.minecraft;
 
+import cpw.mods.modlauncher.log.MLClassLoaderContextSelector;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
 import net.fabricmc.loader.impl.util.ManifestUtil;

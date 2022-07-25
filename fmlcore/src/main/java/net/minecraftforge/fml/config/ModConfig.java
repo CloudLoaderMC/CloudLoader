@@ -19,7 +19,7 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
-// Added JSON because the module was added for fabric.mod.json & just in case it's needed for something
+// Added JSON because the module was added for fabric.mod.json & quilt.mod.json, and just in case it's needed for something
 public class ModConfig
 {
     private final Type type;

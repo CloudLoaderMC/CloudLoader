@@ -16,6 +16,8 @@
 
 package net.fabricmc.loader.impl.util.log;
 
+import cpw.mods.modlauncher.log.MLClassLoaderContextSelector;
+
 import java.util.Arrays;
 import java.util.IllegalFormatException;
 

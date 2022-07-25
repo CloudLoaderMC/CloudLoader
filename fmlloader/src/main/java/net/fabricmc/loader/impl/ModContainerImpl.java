@@ -36,9 +36,13 @@ import net.fabricmc.loader.impl.metadata.ModOriginImpl;
 import net.fabricmc.loader.impl.util.FileSystemUtil;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
+import net.minecraftforge.fml.loading.moddiscovery.ModInfo;
 
 @SuppressWarnings("deprecation")
 public class ModContainerImpl extends net.fabricmc.loader.ModContainer {
+	private final ModInfo forgeInfo;
+	private final ModCandidate candidate;
+
 	private final LoaderModMetadata info;
 	private final ModOrigin origin;
 	private final List<Path> codeSourcePaths;
@@ -47,7 +51,27 @@ public class ModContainerImpl extends net.fabricmc.loader.ModContainer {
 
 	private volatile List<Path> roots;
 
+	/*public ModContainerImpl(ModInfo forgeInfo) {
+		this.forgeInfo = forgeInfo;
+		this.candidate = null;
+		this.info = forgeInfo.getOwningFile().getFabricMetadata();
+		this.codeSourcePaths = candidate.getPaths();
+		this.parentModId = candidate.getParentMods().isEmpty() ? null : candidate.getParentMods().iterator().next().getId();
+		this.childModIds = candidate.getNestedMods().isEmpty() ? Collections.emptyList() : new ArrayList<>(candidate.getNestedMods().size());
+
+		for (ModCandidate c : candidate.getNestedMods()) {
+			if (c.getParentMods().size() <= 1 || c.getParentMods().iterator().next() == candidate) {
+				childModIds.add(c.getId());
+			}
+		}
+
+		List<Path> paths = candidate.getOriginPaths();
+		this.origin = paths != null ? new ModOriginImpl(paths) : new ModOriginImpl(parentModId, candidate.getLocalPath());
+	}*/
+
 	public ModContainerImpl(ModCandidate candidate) {
+		this.forgeInfo = null;
+		this.candidate = candidate;
 		this.info = candidate.getMetadata();
 		this.codeSourcePaths = candidate.getPaths();
 		this.parentModId = candidate.getParentMods().isEmpty() ? null : candidate.getParentMods().iterator().next().getId();

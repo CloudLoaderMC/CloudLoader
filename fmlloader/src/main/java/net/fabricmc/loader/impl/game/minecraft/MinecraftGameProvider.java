@@ -355,7 +355,7 @@ public class MinecraftGameProvider implements GameProvider {
 				logHandlerCls = Class.forName(logHandlerClsName);
 			}
 
-			Log.init((LogHandler) logHandlerCls.getConstructor().newInstance());
+//			Log.init((LogHandler) logHandlerCls.getConstructor().newInstance());
 			Thread.currentThread().setContextClassLoader(prevCl);
 		} catch (ReflectiveOperationException e) {
 			throw new RuntimeException(e);

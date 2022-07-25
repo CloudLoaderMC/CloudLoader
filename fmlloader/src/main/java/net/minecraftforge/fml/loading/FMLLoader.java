@@ -20,9 +20,9 @@ import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import net.fabricmc.loader.impl.game.GameProvider;
 import net.fabricmc.loader.impl.launch.FabricLauncherBase;
 import net.fabricmc.loader.impl.launch.FabricMixinBootstrap;
+import net.fabricmc.loader.impl.util.LoaderUtil;
+import net.fabricmc.loader.impl.util.SystemProperties;
 import net.fabricmc.loader.impl.util.UrlUtil;
-import net.fabricmc.loader.impl.util.log.Log;
-import net.fabricmc.loader.impl.util.log.LogCategory;
 import net.minecraftforge.fml.loading.moddiscovery.BackgroundScanHandler;
 import net.minecraftforge.fml.loading.moddiscovery.ModDiscoverer;
 import net.minecraftforge.fml.loading.moddiscovery.ModFile;
@@ -37,9 +37,11 @@ import net.minecraftforge.forgespi.coremod.ICoreModProvider;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
@@ -52,8 +54,7 @@ import java.util.zip.ZipFile;
 import static net.minecraftforge.fml.loading.LogMarkers.CORE;
 import static net.minecraftforge.fml.loading.LogMarkers.SCAN;
 
-public class FMLLoader extends FabricLauncherBase
-{
+public class FMLLoader extends FabricLauncherBase {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static AccessTransformerService accessTransformer;
     private static ModDiscoverer modDiscoverer;
@@ -84,13 +85,14 @@ public class FMLLoader extends FabricLauncherBase
     private GameProvider provider;
     private boolean unlocked;
 
-    private FMLLoader() {
+    private FMLLoader(EnvType envType) {
         super();
+        this.envType = envType;
     }
 
     static void onInitialLoad(ArgumentHandler argumentHandler, IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException
     {
-        FMLLoader loader = new FMLLoader();
+        FMLLoader loader = new FMLLoader(argumentHandler.getLaunchTarget().contains("client") ? EnvType.CLIENT : EnvType.SERVER);
         final String version = LauncherVersion.getVersion();
         LOGGER.debug(CORE,"FML {} loading", version);
         final Package modLauncherPackage = ITransformationService.class.getPackage();
@@ -145,29 +147,57 @@ public class FMLLoader extends FabricLauncherBase
         LOGGER.debug(CORE,"FML found CoreMod version : {}", coremodPackage.getImplementationVersion());
 
 
-        GameProvider provider = loader.createGameProvider(argumentHandler.buildArgumentList());
+        loader.isDevelopment = Boolean.parseBoolean(System.getProperty(SystemProperties.DEVELOPMENT, "false"));
+
+        loader.classPath.clear();
+
+        List<String> missing = null;
+        List<String> unsupported = null;
+
+        for (String cpEntry : System.getProperty("java.class.path").split(File.pathSeparator)) {
+            if (cpEntry.equals("*") || cpEntry.endsWith(File.separator + "*")) {
+                if (unsupported == null) unsupported = new ArrayList<>();
+                unsupported.add(cpEntry);
+                continue;
+            }
+
+            Path path = Paths.get(cpEntry);
+
+            if (!Files.exists(path)) {
+                if (missing == null) missing = new ArrayList<>();
+                missing.add(cpEntry);
+                continue;
+            }
+
+            loader.classPath.add(LoaderUtil.normalizeExistingPath(path));
+        }
+
+        loader.provider = loader.createGameProvider(argumentHandler.buildArgumentList());
 
         // Setup classloader
         // TODO: Provide KnotCompatibilityClassLoader in non-exclusive-Fabric pre-1.13 environments?
-        boolean useCompatibility = provider.requiresUrlClassLoader() || Boolean.parseBoolean(System.getProperty("fabric.loader.useCompatibilityClassLoader", "false"));
-        FMLClassLoaderInterface classLoader = FMLClassLoaderInterface.create(useCompatibility, loader.isDevelopment(), loader.envType, provider);
-        ClassLoader cl = classLoader.getClassLoader();
+        boolean useCompatibility = loader.provider.requiresUrlClassLoader() || Boolean.parseBoolean(System.getProperty("fabric.loader.useCompatibilityClassLoader", "false"));
+        loader.classLoader = FMLClassLoaderInterface.create(useCompatibility, loader.isDevelopment(), loader.envType, loader.provider);
+        ClassLoader cl = loader.classLoader.getClassLoader();
 
-        provider.initialize(loader);
+        loader.provider.initialize(loader);
 
         Thread.currentThread().setContextClassLoader(cl);
 
         FabricLoaderImpl fabricLoader = FabricLoaderImpl.INSTANCE;
-        fabricLoader.setGameProvider(provider);
+        fabricLoader.setGameProvider(loader.provider);
+        /*fabricLoader.load();
+        fabricLoader.freeze();*/
 
         FabricLoaderImpl.INSTANCE.loadAccessWideners();
 
         FabricMixinBootstrap.init(fabricLoader.getEnvironmentType(), fabricLoader);
         FabricLauncherBase.finishMixinBootstrapping();
 
-        classLoader.initializeTransformers();
+        loader.classLoader.initializeTransformers();
 
-        provider.unlockClassPath(loader);
+        loader.provider.unlockClassPath(loader);
+        loader.unlocked = true;
 
         try {
             EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
@@ -325,7 +355,7 @@ public class FMLLoader extends FabricLauncherBase
 
     @Override
     public void addToClassPath(Path path, String... allowedPrefixes) {
-        Log.debug(LogCategory.FML, "Adding " + path + " to classpath.");
+        LOGGER.debug("Adding " + path + " to classpath.");
 
         classLoader.setAllowedPrefixes(path, allowedPrefixes);
         classLoader.addCodeSource(path);
@@ -449,7 +479,7 @@ public class FMLLoader extends FabricLauncherBase
                     failedProviders.stream().map(GameProvider::getGameName).collect(Collectors.joining(", ")));
         }
 
-        Log.error(LogCategory.GAME_PROVIDER, msg);
+        LOGGER.error(msg);
 
         throw new RuntimeException(msg);
     }
@@ -466,8 +496,7 @@ public class FMLLoader extends FabricLauncherBase
 
             try (ZipFile zf = new ZipFile(flPath.toFile())) {
                 ZipEntry entry = zf.getEntry("META-INF/services/net.fabricmc.loader.impl.game.GameProvider"); // same file as used by service loader
-                if (entry == null)
-                    return null;
+                if (entry == null) return null;
 
                 try (InputStream is = zf.getInputStream(entry)) {
                     byte[] buffer = new byte[100];

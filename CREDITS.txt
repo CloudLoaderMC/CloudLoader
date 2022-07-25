@@ -11,6 +11,7 @@ The code is authored by DaRubyMiner360.
 It contains a large portion of the code from the following loaders:
 Forge (https://www.minecraftforge.net/)
 Fabric (https://fabricmc.net/)
+Quilt (https://quiltmc.org/)
 
 
 Additionally, it contains an implementation of topological sort based on that 

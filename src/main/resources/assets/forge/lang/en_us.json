@@ -74,8 +74,6 @@
   "fml.modloading.brokenfile": "File {2} is not a valid mod file",
   "fml.modloading.brokenfile.oldforge": "File {2} is for an older version of Cloud and cannot be loaded",
   "fml.modloading.brokenfile.liteloader": "File {2} is a LiteLoader mod and cannot be loaded",
-  "fml.modloading.brokenfile.fabric": "File {2} is a Fabric mod and cannot be loaded",
-  "fml.modloading.brokenfile.quilt": "File {2} is a Quilt mod and cannot be loaded",
   "fml.modloading.brokenfile.optifine": "File {2} is an incompatible version of OptiFine",
   "fml.modloading.brokenfile.bukkit": "File {2} is a Bukkit or Bukkit-implementor (Spigot, Paper, etc.) plugin and cannot be loaded",
   "fml.modloading.brokenfile.invalidzip": "File {2} is not a jar file",

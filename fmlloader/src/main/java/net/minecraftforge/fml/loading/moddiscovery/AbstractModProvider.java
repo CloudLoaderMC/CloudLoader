@@ -121,6 +121,9 @@ public abstract class AbstractModProvider implements IModProvider
             if (Files.exists(mod.findResource("fabric.mod.json"))) {
                 return ModLoaderType.FABRIC;
             }
+            if (Files.exists(mod.findResource("quilt.mod.json"))) {
+                return ModLoaderType.QUILT;
+            }
             return ModLoaderType.FORGE;
         }
 

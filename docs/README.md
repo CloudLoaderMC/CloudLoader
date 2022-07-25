@@ -43,7 +43,6 @@ Cloud aims to support the following loaders' mods:
 * [ ] Liteloader
 * [ ] Sponge
 * [ ] Bukkit & derivatives
-* [ ] BungeeCord & derivatives
 
 ## Contribute to Cloud
 

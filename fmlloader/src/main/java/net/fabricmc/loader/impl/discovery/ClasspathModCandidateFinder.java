@@ -46,7 +46,7 @@ public class ClasspathModCandidateFinder implements ModCandidateFinder {
 		if (FabricLauncherBase.getLauncher().isDevelopment()) {
 			Map<Path, List<Path>> pathGroups = getPathGroups();
 
-			// Search for URLs which point to 'fabric.mod.json' entries, to be considered as mods.
+			// Search for URLs which point to 'mods.toml' or 'fabric.mod.json' entries, to be considered as mods.
 			try {
 				Enumeration<URL> mods = FabricLauncherBase.getLauncher().getTargetClassLoader().getResources("fabric.mod.json");
 
