@@ -163,35 +163,15 @@ public class ModList
     {
         Optional<? extends ModContainer> mod = Optional.ofNullable(this.indexedMods.get(modId));
         if (mod.isEmpty()) {
-            if (LoadingConstants.modIdAliases.containsKey(modId)) {
-                for (String value : LoadingConstants.modIdAliases.get(modId)) {
-                    if (indexedMods.containsKey(value)) {
-                        if (mod.isPresent()) {
-                            break;
-                        }
-                        mod = Optional.ofNullable(this.indexedMods.get(value));
-                    }
-                }
-            }
-            else {
-                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
-                    for (String value : pair.getValue()) {
-                        if (modId.equals(value)) {
-                            if (indexedMods.containsKey(pair.getKey())) {
+            for (var list : LoadingConstants.modIdAliases) {
+                for (String value : list) {
+                    if (modId.equals(value)) {
+                        for (String v : list) {
+                            if (indexedMods.containsKey(v)) {
                                 if (mod.isPresent()) {
                                     break;
                                 }
-                                mod = Optional.ofNullable(this.indexedMods.get(value));
-                            }
-                            else {
-                                for (String v : pair.getValue()) {
-                                    if (indexedMods.containsKey(v)) {
-                                        if (mod.isPresent()) {
-                                            break;
-                                        }
-                                        mod = Optional.ofNullable(this.indexedMods.get(v));
-                                    }
-                                }
+                                mod = Optional.ofNullable(this.indexedMods.get(v));
                             }
                         }
                     }
@@ -215,35 +195,15 @@ public class ModList
     {
         boolean result = this.indexedMods.containsKey(modTarget);
         if (!result) {
-            if (LoadingConstants.modIdAliases.containsKey(modTarget)) {
-                for (String value : LoadingConstants.modIdAliases.get(modTarget)) {
-                    if (indexedMods.containsKey(value)) {
-                        if (result) {
-                            break;
-                        }
-                        result = this.indexedMods.containsKey(value);
-                    }
-                }
-            }
-            else {
-                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
-                    for (String value : pair.getValue()) {
-                        if (modTarget.equals(value)) {
-                            if (indexedMods.containsKey(pair.getKey())) {
+            for (var list : LoadingConstants.modIdAliases) {
+                for (String value : list) {
+                    if (modTarget.equals(value)) {
+                        for (String v : list) {
+                            if (indexedMods.containsKey(v)) {
                                 if (result) {
                                     break;
                                 }
-                                result = this.indexedMods.containsKey(value);
-                            }
-                            else {
-                                for (String v : pair.getValue()) {
-                                    if (indexedMods.containsKey(v)) {
-                                        if (result) {
-                                            break;
-                                        }
-                                        result = this.indexedMods.containsKey(v);
-                                    }
-                                }
+                                result = this.indexedMods.containsKey(v);
                             }
                         }
                     }

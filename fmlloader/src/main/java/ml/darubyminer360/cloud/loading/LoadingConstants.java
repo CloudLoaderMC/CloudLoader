@@ -3,7 +3,9 @@ package ml.darubyminer360.cloud.loading;
 import java.util.*;
 
 public class LoadingConstants {
-    public static Map<? extends String, ? extends List<? extends String>> modIdAliases = Map.ofEntries(
-//            Map.entry("cloth_config", new ArrayList<>(Arrays.asList("cloth-config")))
+    public static List<? extends List<? extends String>> modIdAliases = new ArrayList<>(
+            Arrays.asList(
+//                    Arrays.asList("cloth_config", "cloth-config")
+            )
     );
 }

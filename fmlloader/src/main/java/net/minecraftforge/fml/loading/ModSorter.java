@@ -217,29 +217,13 @@ public class ModSorter
         LOGGER.debug(LOADING, "Found {} mod conflicts ({} mandatory, {} optional)", modConflicts.size(), mandatoryConflicts, modConflicts.size() - mandatoryConflicts);
         for (Iterator<IModInfo.ModVersion> i = modRequirements.iterator(); i.hasNext();) {
             IModInfo.ModVersion element = i.next();
-            if (LoadingConstants.modIdAliases.containsKey(element.getModId())) {
-                for (String value : LoadingConstants.modIdAliases.get(element.getModId())) {
-                    if (modVersions.containsKey(value)) {
-                        i.remove();
-                        break;
-                    }
-                }
-            }
-            else {
-                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
-                    for (String value : pair.getValue()) {
-                        if (element.getModId().equals(value)) {
-                            if (modVersions.containsKey(pair.getKey())) {
+            for (var list : LoadingConstants.modIdAliases) {
+                for (String value : list) {
+                    if (element.getModId().equals(value)) {
+                        for (String v : list) {
+                            if (modVersions.containsKey(v)) {
                                 i.remove();
                                 break;
-                            }
-                            else {
-                                for (String v : pair.getValue()) {
-                                    if (modVersions.containsKey(v)) {
-                                        i.remove();
-                                        break;
-                                    }
-                                }
                             }
                         }
                     }
@@ -247,19 +231,11 @@ public class ModSorter
             }
         }
         for (IModInfo.ModVersion ver : modConflicts) {
-            if (LoadingConstants.modIdAliases.containsKey(ver.getModId())) {
-                for (String value : LoadingConstants.modIdAliases.get(ver.getModId())) {
-                    modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), value, ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
-                }
-            }
-            else {
-                for (var pair : LoadingConstants.modIdAliases.entrySet()) {
-                    modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), pair.getKey(), ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
-                    for (String value : pair.getValue()) {
-                        if (ver.getModId().equals(value)) {
-                            for (String v : pair.getValue()) {
-                                modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), v, ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
-                            }
+            for (var list : LoadingConstants.modIdAliases) {
+                for (String value : list) {
+                    if (ver.getModId().equals(value)) {
+                        for (String v : list) {
+                            modConflicts.add(((ModInfo.ModVersion) ver).build(ver.getOwner(), v, ver.getVersionRange(), ver.isMandatory(), ver.isPositive(), ver.getOrdering(), ver.getSide(), ver.getReferralURL().orElse(null)));
                         }
                     }
                 }

@@ -17,16 +17,12 @@ import java.util.*;
 import static net.minecraftforge.fml.Logging.CLOUDMOD;
 
 public class ModIDAliasConfig {
-    public final ConfigValue<Map<? extends String, ? extends List<? extends String>>> modIdAliases;
+    public final ConfigValue<List<? extends List<? extends String>>> modIdAliases;
 
     ModIDAliasConfig(ForgeConfigSpec.Builder builder) {
         modIdAliases = builder
-                .comment("Set this to true to cache resource listings in resource and data packs")
                 .translation("cloud.configgui.modIdAliases")
-                .defineMap("modIdAliases", LoadingConstants.modIdAliases, entry -> true);
-
-
-//        builder.pop();
+                .defineList("modIdAliases", LoadingConstants.modIdAliases, entry -> true);
     }
 
     static final ForgeConfigSpec commonSpec;
