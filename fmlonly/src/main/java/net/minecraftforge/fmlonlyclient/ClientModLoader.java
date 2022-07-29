@@ -110,9 +110,6 @@ public class ClientModLoader
         loadingComplete = true;
         // reload game settings on main thread
         syncExecutor.execute(()->mc.options.load());
-
-        EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
-        EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
     }
 
     public static boolean completeModLoading()
@@ -142,6 +139,9 @@ public class ClientModLoader
 //            // Double check we have the langs loaded for forge
 //            LanguageHook.loadForgeAndMCLangs();
 //            dumpedLocation = CrashReportExtender.dumpModLoadingCrashReport(LOGGER, error, mc.gameDirectory);
+//
+//            EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
+//            EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
 //        }
 //        if (error != null || !warnings.isEmpty()) {
 //            mc.setScreen(new LoadingErrorScreen(error, warnings, dumpedLocation));

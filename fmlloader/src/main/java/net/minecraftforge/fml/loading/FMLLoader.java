@@ -199,12 +199,6 @@ public class FMLLoader extends FabricLauncherBase {
         loader.provider.unlockClassPath(loader);
         loader.unlocked = true;
 
-        try {
-            EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
-        } catch (RuntimeException e) {
-            throw new FormattedException("A mod crashed on startup!", e);
-        }
-
 
         LOGGER.debug(CORE, "Found CloudSPI package implementation version {}", Environment.class.getPackage().getImplementationVersion());
         LOGGER.debug(CORE, "Found CloudSPI package specification {}", Environment.class.getPackage().getSpecificationVersion());
@@ -220,6 +214,13 @@ public class FMLLoader extends FabricLauncherBase {
         } catch (ClassNotFoundException e) {
             LOGGER.error(CORE, "Failed to load NightConfig");
             throw new IncompatibleEnvironmentException("Missing NightConfig");
+        }
+
+
+        try {
+            EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
+        } catch (RuntimeException e) {
+            throw new FormattedException("A mod crashed on startup!", e);
         }
     }
 

@@ -14,6 +14,9 @@ import java.util.Map.Entry;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 
+import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.repository.RepositorySource;
 import net.minecraft.server.packs.resources.PreparableReloadListener;
@@ -166,6 +169,9 @@ public class ClientModLoader
             // Double check we have the langs loaded for forge
             LanguageHook.loadForgeAndMCLangs();
             dumpedLocation = CrashReportExtender.dumpModLoadingCrashReport(LOGGER, error, mc.gameDirectory);
+
+            EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
+            EntrypointUtils.invoke("client", ClientModInitializer.class, ClientModInitializer::onInitializeClient);
         }
         if (error != null || !warnings.isEmpty()) {
             mc.setScreen(new LoadingErrorScreen(error, warnings, dumpedLocation));

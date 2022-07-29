@@ -5,6 +5,9 @@
 
 package net.minecraftforge.server.loading;
 
+import net.fabricmc.api.DedicatedServerModInitializer;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.impl.entrypoint.EntrypointUtils;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.*;
 import net.minecraftforge.logging.CrashReportExtender;
@@ -45,6 +48,9 @@ public class ServerModLoader
             warnings.forEach(warning -> LOGGER.warn(LOADING, warning.formatToString()));
         }
         MinecraftForge.EVENT_BUS.start();
+
+        EntrypointUtils.invoke("main", ModInitializer.class, ModInitializer::onInitialize);
+        EntrypointUtils.invoke("server", DedicatedServerModInitializer.class, DedicatedServerModInitializer::onInitializeServer);
     }
 
     public static boolean hasErrors() {

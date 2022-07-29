@@ -28,9 +28,7 @@ You can download the installer for the *Recommended Build* or the
  into your vanilla launcher environment, where you can then create a new
  profile using that version and play the game!
 
-For support and questions, visit [the Support Forum](https://www.minecraftforge.net/forum/forum/18-support-bug-reports/) or [the Cloud Discord server](https://discord.gg/RFdu74kmMp).
-
-[Here is a short video from Rorax showing how to install and setup Forge.](https://www.youtube.com/watch?v=lB3ArN_-3Oc)
+For support and questions, join [the Cloud Discord server](https://discord.gg/RFdu74kmMp).
 
 ## Mod Support
 

@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.concurrent.Callable;
 
-// Added JSON because the module was added for fabric.mod.json & quilt.mod.json, and just in case it's needed for something
 public class ModConfig
 {
     private final Type type;
@@ -44,16 +43,16 @@ public class ModConfig
     }
 
     public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer activeContainer, ConfigFileTypeHandler configHandler) {
-        this(type, spec, activeContainer, defaultConfigName(type, activeContainer.getModId()), configHandler);
+        this(type, spec, activeContainer, defaultConfigName(type, activeContainer.getModId(), configHandler.extension), configHandler);
     }
 
     public ModConfig(final Type type, final IConfigSpec<?> spec, final ModContainer activeContainer) {
-        this(type, spec, activeContainer, defaultConfigName(type, activeContainer.getModId()));
+        this(type, spec, activeContainer, defaultConfigName(type, activeContainer.getModId(), ConfigFileTypeHandler.TOML.extension));
     }
 
-    private static String defaultConfigName(Type type, String modId) {
+    private static String defaultConfigName(Type type, String modId, String extension) {
         // config file name would be "forge-client.toml" and "forge-server.toml"
-        return String.format(Locale.ROOT, "%s-%s.toml", modId, type.extension());
+        return String.format(Locale.ROOT, "%s-%s.%s", modId, type.extension(), extension);
     }
     public Type getType() {
         return type;

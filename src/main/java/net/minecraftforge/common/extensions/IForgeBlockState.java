@@ -39,6 +39,7 @@ import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraftforge.common.ToolAction;
 import net.minecraftforge.common.ToolActions;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface IForgeBlockState
@@ -183,14 +184,14 @@ public interface IForgeBlockState
         self().getBlock().setBedOccupied(self(), level, pos, sleeper, occupied);
     }
 
-   /**
-    * Returns the direction of the block. Same values that
-    * are returned by BlockDirectional
-    *
-    * @param level The current level
-    * @param pos Block position in level
-    * @return Bed direction
-    */
+    /**
+     * Returns the direction of the block. Same values that
+     * are returned by BlockDirectional
+     *
+     * @param level The current level
+     * @param pos Block position in level
+     * @return Bed direction
+     */
     default Direction getBedDirection(LevelReader level, BlockPos pos)
     {
         return self().getBlock().getBedDirection(self(), level, pos);
@@ -237,52 +238,52 @@ public interface IForgeBlockState
     {
         return self().getBlock().addLandingEffects(self(), level, pos, state2, entity, numberOfParticles);
     }
-   /**
-    * Allows a block to override the standard vanilla running particles.
-    * This is called from {@code Entity#spawnSprintParticle()} and is called both,
-    * Client and server side, it's up to the implementor to client check / server check.
-    * By default vanilla spawns particles only on the client and the server methods no-op.
-    *
-    * @param level  The level.
-    * @param pos    The position at the entities feet.
-    * @param entity The entity running on the block.
-    * @return True to prevent vanilla running particles from spawning.
-    */
+    /**
+     * Allows a block to override the standard vanilla running particles.
+     * This is called from {@code Entity#spawnSprintParticle()} and is called both,
+     * Client and server side, it's up to the implementor to client check / server check.
+     * By default vanilla spawns particles only on the client and the server methods no-op.
+     *
+     * @param level  The level.
+     * @param pos    The position at the entities feet.
+     * @param entity The entity running on the block.
+     * @return True to prevent vanilla running particles from spawning.
+     */
     default boolean addRunningEffects(Level level, BlockPos pos, Entity entity)
     {
         return self().getBlock().addRunningEffects(self(), level, pos, entity);
     }
 
-   /**
-    * Determines if this block can support the passed in plant, allowing it to be planted and grow.
-    * Some examples:
-    *   Reeds check if its a reed, or if its sand/dirt/grass and adjacent to water
-    *   Cacti checks if its a cacti, or if its sand
-    *   Nether types check for soul sand
-    *   Crops check for tilled soil
-    *   Caves check if it's a solid surface
-    *   Plains check if its grass or dirt
-    *   Water check if its still water
-    *
-    * @param level The current level
-    * @param facing The direction relative to the given position the plant wants to be, typically its UP
-    * @param plantable The plant that wants to check
-    * @return True to allow the plant to be planted/stay.
-    */
+    /**
+     * Determines if this block can support the passed in plant, allowing it to be planted and grow.
+     * Some examples:
+     *   Reeds check if its a reed, or if its sand/dirt/grass and adjacent to water
+     *   Cacti checks if its a cacti, or if its sand
+     *   Nether types check for soul sand
+     *   Crops check for tilled soil
+     *   Caves check if it's a solid surface
+     *   Plains check if its grass or dirt
+     *   Water check if its still water
+     *
+     * @param level The current level
+     * @param facing The direction relative to the given position the plant wants to be, typically its UP
+     * @param plantable The plant that wants to check
+     * @return True to allow the plant to be planted/stay.
+     */
     default boolean canSustainPlant(BlockGetter level, BlockPos pos, Direction facing, IPlantable plantable)
     {
         return self().getBlock().canSustainPlant(self(), level, pos, facing, plantable);
     }
 
-   /**
-    * Checks if this soil is fertile, typically this means that growth rates
-    * of plants on this soil will be slightly sped up.
-    * Only vanilla case is tilledField when it is within range of water.
-    *
-    * @param level The current level
-    * @param pos Block position in level
-    * @return True if the soil should be considered fertile.
-    */
+    /**
+     * Checks if this soil is fertile, typically this means that growth rates
+     * of plants on this soil will be slightly sped up.
+     * Only vanilla case is tilledField when it is within range of water.
+     *
+     * @param level The current level
+     * @param pos Block position in level
+     * @return True if the soil should be considered fertile.
+     */
     default boolean isFertile(BlockGetter level, BlockPos pos)
     {
         return self().getBlock().isFertile(self(), level, pos);
@@ -313,16 +314,16 @@ public interface IForgeBlockState
         return self().getBlock().isPortalFrame(self(), level, pos);
     }
 
-   /**
-    * Gathers how much experience this block drops when broken.
-    *
-    * @param level The level
-    * @param randomSource Random source to use for experience randomness
-    * @param pos Block position
-    * @param fortuneLevel fortune enchantment level of tool being used
-    * @param silkTouchLevel silk touch enchantment level of tool being used
-    * @return Amount of XP from breaking this block.
-    */
+    /**
+     * Gathers how much experience this block drops when broken.
+     *
+     * @param level The level
+     * @param randomSource Random source to use for experience randomness
+     * @param pos Block position
+     * @param fortuneLevel fortune enchantment level of tool being used
+     * @param silkTouchLevel silk touch enchantment level of tool being used
+     * @return Amount of XP from breaking this block.
+     */
     default int getExpDrop(LevelReader level, RandomSource randomSource, BlockPos pos, int fortuneLevel, int silkTouchLevel)
     {
         return self().getBlock().getExpDrop(self(), level, randomSource, pos, fortuneLevel, silkTouchLevel);
@@ -333,35 +334,35 @@ public interface IForgeBlockState
         return self().getBlock().rotate(self(), level, pos, direction);
     }
 
-   /**
-    * Determines the amount of enchanting power this block can provide to an enchanting table.
-    * @param level The level
-    * @param pos Block position in level
-    * @return The amount of enchanting power this block produces.
-    */
+    /**
+     * Determines the amount of enchanting power this block can provide to an enchanting table.
+     * @param level The level
+     * @param pos Block position in level
+     * @return The amount of enchanting power this block produces.
+     */
     default float getEnchantPowerBonus(LevelReader level, BlockPos pos)
     {
         return self().getBlock().getEnchantPowerBonus(self(), level, pos);
     }
 
-   /**
-    * Called when a tile entity on a side of this block changes is created or is destroyed.
-    * @param level The level
-    * @param pos Block position in level
-    * @param neighbor Block position of neighbor
-    */
+    /**
+     * Called when a tile entity on a side of this block changes is created or is destroyed.
+     * @param level The level
+     * @param pos Block position in level
+     * @param neighbor Block position of neighbor
+     */
     default void onNeighborChange(LevelReader level, BlockPos pos, BlockPos neighbor)
     {
         self().getBlock().onNeighborChange(self(), level, pos, neighbor);
     }
 
-   /**
-    * Called to determine whether to allow the a block to handle its own indirect power rather than using the default rules.
-    * @param level The level
-    * @param pos Block position in level
-    * @param side The INPUT side of the block to be powered - ie the opposite of this block's output side
-    * @return Whether Block#isProvidingWeakPower should be called when determining indirect power
-    */
+    /**
+     * Called to determine whether to allow the a block to handle its own indirect power rather than using the default rules.
+     * @param level The level
+     * @param pos Block position in level
+     * @param side The INPUT side of the block to be powered - ie the opposite of this block's output side
+     * @return Whether Block#isProvidingWeakPower should be called when determining indirect power
+     */
     default boolean shouldCheckWeakPower(LevelReader level, BlockPos pos, Direction side)
     {
         return self().getBlock().shouldCheckWeakPower(self(), level, pos, side);
@@ -441,7 +442,7 @@ public interface IForgeBlockState
      * @param other Other block
      * @return True to link blocks
      */
-    default boolean canStickTo(BlockState other)
+    default boolean canStickTo(@NotNull BlockState other)
     {
         return self().getBlock().canStickTo(self(), other);
     }
@@ -537,7 +538,7 @@ public interface IForgeBlockState
      */
     default boolean isBurning(BlockGetter level, BlockPos pos)
     {
-       return self().getBlock().isBurning(self(), level, pos);
+        return self().getBlock().isBurning(self(), level, pos);
     }
 
     /**

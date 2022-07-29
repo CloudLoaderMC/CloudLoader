@@ -16,6 +16,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Either;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
+import ml.darubyminer360.cloudloader.CloudVersion;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;
@@ -388,9 +389,9 @@ public class ForgeHooksClient
         if (status == BETA || status == BETA_OUTDATED)
         {
             // render a warning at the top of the screen,
-            Component line = Component.translatable("forge.update.beta.1", ChatFormatting.RED, ChatFormatting.RESET).withStyle(ChatFormatting.RED);
+            Component line = Component.translatable("cloud.update.beta.1", ChatFormatting.RED, ChatFormatting.RESET).withStyle(ChatFormatting.RED);
             GuiComponent.drawCenteredString(poseStack, font, line, width / 2, 4 + (0 * (font.lineHeight + 1)), 0xFFFFFF | alpha);
-            line = Component.translatable("forge.update.beta.2");
+            line = Component.translatable("cloud.update.beta.2");
             GuiComponent.drawCenteredString(poseStack, font, line, width / 2, 4 + (1 * (font.lineHeight + 1)), 0xFFFFFF | alpha);
         }
 
@@ -398,10 +399,10 @@ public class ForgeHooksClient
         switch(status)
         {
             //case FAILED:        line = " Version check failed"; break;
-            //case UP_TO_DATE:    line = "Forge up to date"}; break;
-            //case AHEAD:         line = "Using non-recommended Forge build, issues may arise."}; break;
+            //case UP_TO_DATE:    line = "Cloud up to date"}; break;
+            //case AHEAD:         line = "Using non-recommended Cloud build, issues may arise."}; break;
             case OUTDATED:
-            case BETA_OUTDATED: line = I18n.get("forge.update.newversion", ForgeVersion.getTarget()); break;
+            case BETA_OUTDATED: line = I18n.get("cloud.update.newversion", CloudVersion.getTarget()); break;
             default: break;
         }
 
@@ -757,7 +758,7 @@ public class ForgeHooksClient
         var model = blockRenderer.getBlockModel(state);
         for (var renderType : model.getRenderTypes(state, RandomSource.create(state.getSeed(pos)), ModelData.EMPTY))
         {
-            VertexConsumer vertexConsumer = bufferSource.getBuffer(renderType == RenderType.translucent() ? RenderType.translucentMovingBlock() : renderType);
+            VertexConsumer vertexConsumer = bufferSource.getBuffer(RenderTypeHelper.getMovingBlockRenderType(renderType));
             blockRenderer.getModelRenderer().tesselateBlock(level, model, state, pos, stack, vertexConsumer, checkSides, RandomSource.create(), state.getSeed(pos), packedOverlay, ModelData.EMPTY, renderType);
         }
     }
@@ -958,13 +959,9 @@ public class ForgeHooksClient
      * for the input {@link RenderType}.
      */
     @NotNull
-    public static RenderType getEntityRenderType(RenderType chunkRenderType, boolean fabulous)
+    public static RenderType getEntityRenderType(RenderType chunkRenderType, boolean cull)
     {
-        if (chunkRenderType != RenderType.translucent())
-            return Sheets.cutoutBlockSheet();
-        if (!Minecraft.useShaderTransparency())
-            return Sheets.translucentCullBlockSheet();
-        return fabulous ? Sheets.translucentCullBlockSheet() : Sheets.translucentItemSheet();
+        return RenderTypeHelper.getEntityRenderType(chunkRenderType, cull);
     }
 
     @Mod.EventBusSubscriber(value = Dist.CLIENT, modid="forge", bus= Mod.EventBusSubscriber.Bus.MOD)

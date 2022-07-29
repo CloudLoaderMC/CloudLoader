@@ -16,7 +16,7 @@ public class CloudVersion {
 
     static {
         // TODO: Automate this?
-        cloudVersion = "1.0.0";
+        cloudVersion = "0.0.1";
         LOGGER.debug(CORE, "Found Cloud version {}", cloudVersion);
     }
 
@@ -30,7 +30,8 @@ public class CloudVersion {
 
     @Nullable
     public static String getTarget() {
-        VersionChecker.CheckResult res = VersionChecker.getResult(ModList.get().getModFileById(MOD_ID).getMods().get(0));
+        // Forge is 0, and Cloud is 1. Will try to change later.
+        VersionChecker.CheckResult res = VersionChecker.getResult(ModList.get().getModFileById(MOD_ID).getMods().get(1));
         return res.target() == null ? "" : res.target().toString();
     }
 }

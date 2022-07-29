@@ -26,6 +26,9 @@ public class Utils {
         if (startIndex >= 0 && endIndex >= 0) {
             return input.replace(newInput, "").replace(input.substring(endIndex), "") + newInput.replaceAll(Pattern.quote(toReplace), replaceWith) + input.substring(endIndex);
         }
+        if (startIndex == -1 && endIndex == -1) {
+            return input;
+        }
         return input.replace(newInput, "") + newInput.replaceAll(Pattern.quote(toReplace), replaceWith);
     }
 }

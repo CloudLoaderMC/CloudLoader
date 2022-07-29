@@ -7,10 +7,7 @@ package net.minecraftforge.client.gui;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -451,11 +448,23 @@ public class ModListScreen extends Screen
 
         selectedMod.getConfig().getConfigElement("credits").ifPresent(credits->
                 lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.credits", credits)));
-        selectedMod.getConfig().getConfigElement("authors").ifPresent(authors ->
-                lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.authors", authors)));
+        if (selectedMod.getOwningFile().getNativeLoader() == ModLoaderType.FORGE) {
+            selectedMod.getConfig().getConfigElement("authors").ifPresent(authors ->
+                    lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.authors", authors)));
+        }
+        else {
+            selectedMod.getConfig().getConfigElement("authors").ifPresent(authors -> {
+                if (authors.toString().startsWith("[") && authors.toString().endsWith("]")) {
+                    lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.authors", authors.toString().substring(1, authors.toString().length() - 1)));
+                }
+                else {
+                    lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.authors", authors));
+                }
+            });
+        }
         selectedMod.getConfig().getConfigElement("displayURL").ifPresent(displayURL ->
                 lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.displayurl", displayURL)));
-        if (selectedMod.getOwningFile() == null || selectedMod.getOwningFile().getMods().size()==1)
+        if (selectedMod.getOwningFile() == null || selectedMod.getOwningFile().getMods().size() == 1 || Objects.equals(selectedMod.getModId(), "forge") || Objects.equals(selectedMod.getModId(), "cloudloader"))
             lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.nochildmods"));
         else
             lines.add(ForgeI18n.parseMessage("fml.menu.mods.info.childmods", selectedMod.getOwningFile().getMods().stream().map(IModInfo::getDisplayName).collect(Collectors.joining(","))));

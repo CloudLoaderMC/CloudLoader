@@ -140,9 +140,9 @@
   "commands.config.getwithtype": "Config for %s of type %s found at %s",
   "commands.config.noconfig": "Config for %s of type %s not found",
 
-  "forge.update.beta.1": "%sWARNING: %sCloud Beta",
-  "forge.update.beta.2": "Major issues may arise, verify before reporting.",
-  "forge.update.newversion": "New Cloud version available: %s",
+  "cloud.update.beta.1": "%sWARNING: %sCloud Beta",
+  "cloud.update.beta.2": "Major issues may arise, verify before reporting.",
+  "cloud.update.newversion": "New Cloud version available: %s",
   "forge.menu.updatescreen.title": "Mod Update",
 
   "forge.configgui.removeErroringEntities.tooltip": "Set this to true to remove any Entity that throws an error in its update method instead of closing the server and reporting a crash log. BE WARNED THIS COULD SCREW UP EVERYTHING USE SPARINGLY WE ARE NOT RESPONSIBLE FOR DAMAGES.",

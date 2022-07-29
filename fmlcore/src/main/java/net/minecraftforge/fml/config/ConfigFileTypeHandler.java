@@ -26,25 +26,23 @@ import static net.minecraftforge.fml.config.ConfigTracker.CONFIG;
 
 public class ConfigFileTypeHandler {
     private static final Logger LOGGER = LogUtils.getLogger();
-    static ConfigFileTypeHandler JSON = new ConfigFileTypeHandler();
-    static ConfigFileTypeHandler TOML = new ConfigFileTypeHandler();
+    static ConfigFileTypeHandler TOML = new ConfigFileTypeHandler("toml");
+    static ConfigFileTypeHandler JSON = new ConfigFileTypeHandler("json");
     private static final Path defaultConfigPath = FMLPaths.GAMEDIR.get().resolve(FMLConfig.defaultConfigPath());
+
+    public final String extension;
+
+    public ConfigFileTypeHandler(String extension) {
+        this.extension = extension;
+    }
+
 
     public Function<ModConfig, FileConfig> reader(Path configBasePath) {
         return (c) -> {
             final Path configPath = configBasePath.resolve(c.getFileName());
             final FileConfig configData;
 
-            if (this == JSON) {
-                configData = CommentedFileConfig.builder(configPath).sync().
-                        preserveInsertionOrder().
-                        autosave().
-                        onFileNotFound((newfile, configFormat)-> setupConfigFile(c, newfile, configFormat)).
-                        writingMode(WritingMode.REPLACE).
-                        build();
-                LOGGER.debug(CONFIG, "Built JSON config for {}", configPath.toString());
-            }
-            else {
+            if (this == TOML) {
                 configData = CommentedFileConfig.builder(configPath).sync().
                         preserveInsertionOrder().
                         autosave().
@@ -52,6 +50,15 @@ public class ConfigFileTypeHandler {
                         writingMode(WritingMode.REPLACE).
                         build();
                 LOGGER.debug(CONFIG, "Built TOML config for {}", configPath.toString());
+            }
+            else {
+                configData = CommentedFileConfig.builder(configPath).sync().
+                        preserveInsertionOrder().
+                        autosave().
+                        onFileNotFound((newfile, configFormat)-> setupConfigFile(c, newfile, configFormat)).
+                        writingMode(WritingMode.REPLACE).
+                        build();
+                LOGGER.debug(CONFIG, "Built JSON config for {}", configPath.toString());
             }
             try
             {
@@ -61,19 +68,19 @@ public class ConfigFileTypeHandler {
             {
                 throw new ConfigLoadingException(c, ex);
             }
-            if (this == JSON) {
-                LOGGER.debug(CONFIG, "Loaded JSON config file {}", configPath.toString());
+            if (this == TOML) {
+                LOGGER.debug(CONFIG, "Loaded TOML config file {}", configPath.toString());
             }
             else {
-                LOGGER.debug(CONFIG, "Loaded TOML config file {}", configPath.toString());
+                LOGGER.debug(CONFIG, "Loaded JSON config file {}", configPath.toString());
             }
             try {
                 FileWatcher.defaultInstance().addWatch(configPath, new ConfigWatcher(c, configData, Thread.currentThread().getContextClassLoader()));
-                if (this == JSON) {
-                    LOGGER.debug(CONFIG, "Watching JSON config file {} for changes", configPath.toString());
+                if (this == TOML) {
+                    LOGGER.debug(CONFIG, "Watching TOML config file {} for changes", configPath.toString());
                 }
                 else {
-                    LOGGER.debug(CONFIG, "Watching TOML config file {} for changes", configPath.toString());
+                    LOGGER.debug(CONFIG, "Watching JSON config file {} for changes", configPath.toString());
                 }
             } catch (IOException e) {
                 throw new RuntimeException("Couldn't watch config file", e);
