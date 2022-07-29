@@ -46,3 +46,6 @@ changelog.txt
 *.7z
 /logs/
 
+# Replit files
+.replit
+replit.nix

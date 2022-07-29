@@ -186,8 +186,8 @@ public class FMLLoader extends FabricLauncherBase {
 
         FabricLoaderImpl fabricLoader = FabricLoaderImpl.INSTANCE;
         fabricLoader.setGameProvider(loader.provider);
-        /*fabricLoader.load();
-        fabricLoader.freeze();*/
+        fabricLoader.load();
+        fabricLoader.freeze();
 
         FabricLoaderImpl.INSTANCE.loadAccessWideners();
 

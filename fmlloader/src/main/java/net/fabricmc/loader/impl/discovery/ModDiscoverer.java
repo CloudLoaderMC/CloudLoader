@@ -259,16 +259,32 @@ public final class ModDiscoverer {
 
 		private ModCandidate computeDir() throws IOException, ParseMetadataException {
 			for (Path path : paths) {
-				Path modJson = path.resolve("fabric.mod.json");
-				if (!Files.exists(modJson)) continue;
-
-				LoaderModMetadata metadata;
-
-				try (InputStream is = Files.newInputStream(modJson)) {
-					metadata = parseMetadata(is, path.toString());
-				}
-
-				return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
+                if (Files.exists(path.resolve("META-INF/mods.toml"))) {
+                    Path modJson = path.resolve("META-INF/mods.toml");
+                    
+                    LoaderModMetadata metadata;
+                    
+                    try (InputStream is = Files.newInputStream(modJson)) {
+                        // FIXME: Change this
+                        metadata = parseMetadata(is, path.toString());
+                    }
+                    
+                    return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
+                }
+                else if (Files.exists(path.resolve("fabric.mod.json"))) {
+                    Path modJson = path.resolve("fabric.mod.json");
+                    
+                    LoaderModMetadata metadata;
+                    
+                    try (InputStream is = Files.newInputStream(modJson)) {
+                        metadata = parseMetadata(is, path.toString());
+                    }
+                    
+                    return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
+                }
+                else {
+                    continue;
+                }
 			}
 
 			return null;
@@ -278,7 +294,8 @@ public final class ModDiscoverer {
 			assert paths.size() == 1;
 
 			try (ZipFile zf = new ZipFile(paths.get(0).toFile())) {
-				ZipEntry entry = zf.getEntry("fabric.mod.json");
+				// FIXME: Add if statements for META-INF/mods.toml and fabric.mod.json, and put the below code in both of them
+                ZipEntry entry = zf.getEntry("fabric.mod.json");
 				if (entry == null) return null;
 
 				LoaderModMetadata metadata;
@@ -349,9 +366,16 @@ public final class ModDiscoverer {
 			LoaderModMetadata metadata = null;
 			ZipEntry entry;
 
-			try (ZipInputStream zis = new ZipInputStream(is)) {
+			// FIXME: Create a base mod metadata interface with just the basics (modid, authors, etc).
+            try (ZipInputStream zis = new ZipInputStream(is)) {
 				while ((entry = zis.getNextEntry()) != null) {
-					if (entry.getName().equals("fabric.mod.json")) {
+                    // FIXME: Debug this and see if it actually hits mods.toml or even goes through META-INF. If it doesn't, iterate through it. //////
+					if (entry.getName().equals("mods.toml")) {
+						// FIXME: Change this to a Forge version.
+                        metadata = parseMetadata(zis, localPath);
+						break;
+					}
+                    else if (entry.getName().equals("fabric.mod.json")) {
 						metadata = parseMetadata(zis, localPath);
 						break;
 					}
