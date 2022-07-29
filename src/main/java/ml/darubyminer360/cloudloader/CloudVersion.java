@@ -16,7 +16,7 @@ public class CloudVersion {
 
     static {
         // TODO: Automate this?
-        cloudVersion = "0.0.1";
+        cloudVersion = "0.1.0";
         LOGGER.debug(CORE, "Found Cloud version {}", cloudVersion);
     }
 
