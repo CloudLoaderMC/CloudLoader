@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.stream.IntStream;
 
-import ml.darubyminer360.cloudloader.CloudVersion;
+import ml.cloudmc.cloudloader.CloudVersion;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;

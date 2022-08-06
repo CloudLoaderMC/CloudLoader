@@ -18,7 +18,7 @@ package net.fabricmc.loader.util.version;
 
 import java.util.Optional;
 
-import ml.darubyminer360.cloud.util.Utils;
+import ml.cloudmc.cloudloader.util.Utils;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;

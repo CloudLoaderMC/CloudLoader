@@ -41,10 +41,14 @@ import java.util.concurrent.Future;
 import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.jar.Manifest;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 
+import cpw.mods.jarhandling.JarMetadata;
+import cpw.mods.jarhandling.SecureJar;
+import ml.cloudmc.cloudspi.BasicModInfo;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.metadata.ModMetadata;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -64,6 +68,10 @@ import net.fabricmc.loader.impl.util.LoaderUtil;
 import net.fabricmc.loader.impl.util.SystemProperties;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
+import net.minecraftforge.fml.loading.moddiscovery.ModFileParser;
+import net.minecraftforge.fml.loading.moddiscovery.ModJarMetadata;
+
+import static net.minecraftforge.fml.loading.moddiscovery.AbstractModProvider.MODS_TOML;
 
 public final class ModDiscoverer {
 	private final VersionOverrides versionOverrides;
@@ -363,16 +371,26 @@ public final class ModDiscoverer {
 		}
 
 		private ModCandidate computeJarStream() throws IOException, ParseMetadataException {
-			LoaderModMetadata metadata = null;
+			BasicModInfo metadata = null;
 			ZipEntry entry;
 
-			// FIXME: Create a base mod metadata interface with just the basics (modid, authors, etc).
             try (ZipInputStream zis = new ZipInputStream(is)) {
 				while ((entry = zis.getNextEntry()) != null) {
                     // FIXME: Debug this and see if it actually hits mods.toml or even goes through META-INF. If it doesn't, iterate through it. //////
-					if (entry.getName().equals("mods.toml")) {
-						// FIXME: Change this to a Forge version.
-                        metadata = parseMetadata(zis, localPath);
+					if (entry.getName().equals("META-INF/mods.toml")) {
+						// FIXME: Change this to Forge.
+						System.out.println("FORGE!!!");
+
+//						var mjm = new ModJarMetadata();
+//						var sj = SecureJar.from(
+//								Manifest::new,
+//								jar -> jar.moduleDataProvider().findFile(MODS_TOML).isPresent() ? mjm : JarMetadata.from(jar, path),
+//								(root, p) -> true,
+//								null
+//						);
+//
+//                        metadata = ModFileParser.modsTomlParser()
+						metadata = parseMetadata(zis, localPath);
 						break;
 					}
                     else if (entry.getName().equals("fabric.mod.json")) {
@@ -384,66 +402,67 @@ public final class ModDiscoverer {
 
 			if (metadata == null) return null;
 
-			if (!metadata.loadsInEnvironment(envType)) {
-				return ModCandidate.createNested(localPath, hash, metadata, requiresRemap, Collections.emptyList());
-			}
-
-			Collection<NestedJarEntry> nestedJars = metadata.getJars();
-			List<ModScanTask> nestedModTasks;
-
-			if (nestedJars.isEmpty()) {
-				nestedModTasks = Collections.emptyList();
-			} else {
-				Set<String> nestedJarPaths = new HashSet<>(nestedJars.size());
-
-				for (NestedJarEntry nestedJar : nestedJars) {
-					nestedJarPaths.add(nestedJar.getFile());
+			List<ModCandidate> nestedMods = new ArrayList<>();
+			if (metadata instanceof LoaderModMetadata) {
+				if (!((LoaderModMetadata) metadata).loadsInEnvironment(envType)) {
+					return ModCandidate.createNested(localPath, hash, ((LoaderModMetadata) metadata), requiresRemap, Collections.emptyList());
 				}
 
-				is.rewind();
+				Collection<NestedJarEntry> nestedJars = ((LoaderModMetadata) metadata).getJars();
+				List<ModScanTask> nestedModTasks;
 
-				try (ZipInputStream zis = new ZipInputStream(is)) {
-					nestedModTasks = computeNestedMods(new ZipEntrySource() {
-						@Override
-						public ZipEntry getNextEntry() throws IOException {
-							if (nestedJarPaths.isEmpty()) return null;
+				if (nestedJars.isEmpty()) {
+					nestedModTasks = Collections.emptyList();
+				} else {
+					Set<String> nestedJarPaths = new HashSet<>(nestedJars.size());
 
-							ZipEntry ret;
+					for (NestedJarEntry nestedJar : nestedJars) {
+						nestedJarPaths.add(nestedJar.getFile());
+					}
 
-							while ((ret = zis.getNextEntry()) != null) {
-								if (isValidNestedJarEntry(ret) && nestedJarPaths.remove(ret.getName())) {
-									is = new RewindableInputStream(zis); // reads the entry, which completes the ZipEntry with any trailing header data
-									return ret;
+					is.rewind();
+
+					try (ZipInputStream zis = new ZipInputStream(is)) {
+						nestedModTasks = computeNestedMods(new ZipEntrySource() {
+							@Override
+							public ZipEntry getNextEntry() throws IOException {
+								if (nestedJarPaths.isEmpty()) return null;
+
+								ZipEntry ret;
+
+								while ((ret = zis.getNextEntry()) != null) {
+									if (isValidNestedJarEntry(ret) && nestedJarPaths.remove(ret.getName())) {
+										is = new RewindableInputStream(zis); // reads the entry, which completes the ZipEntry with any trailing header data
+										return ret;
+									}
 								}
+
+								return null;
 							}
 
-							return null;
-						}
+							@Override
+							public RewindableInputStream getInputStream() throws IOException {
+								return is;
+							}
 
-						@Override
-						public RewindableInputStream getInputStream() throws IOException {
-							return is;
-						}
+							private RewindableInputStream is;
+						});
+					}
 
-						private RewindableInputStream is;
-					});
+					if (!nestedJarPaths.isEmpty() && FabricLoaderImpl.INSTANCE.isDevelopmentEnvironment()) {
+						Log.warn(LogCategory.METADATA, "Mod %s %s references missing nested jars: %s", ((LoaderModMetadata) metadata).getId(), ((LoaderModMetadata) metadata).getVersion(), nestedJarPaths);
+					}
 				}
 
-				if (!nestedJarPaths.isEmpty() && FabricLoaderImpl.INSTANCE.isDevelopmentEnvironment()) {
-					Log.warn(LogCategory.METADATA, "Mod %s %s references missing nested jars: %s", metadata.getId(), metadata.getVersion(), nestedJarPaths);
+				if (nestedModTasks.isEmpty()) {
+					nestedMods = Collections.emptyList();
+				} else {
+					nestedMods = new ArrayList<>();
+					nestedModInitDatas.add(new NestedModInitData(nestedModTasks, nestedMods));
 				}
 			}
 
-			List<ModCandidate> nestedMods;
-
-			if (nestedModTasks.isEmpty()) {
-				nestedMods = Collections.emptyList();
-			} else {
-				nestedMods = new ArrayList<>();
-				nestedModInitDatas.add(new NestedModInitData(nestedModTasks, nestedMods));
-			}
-
-			ModCandidate ret = ModCandidate.createNested(localPath, hash, metadata, requiresRemap, nestedMods);
+			ModCandidate ret = ModCandidate.createNested(localPath, hash, (LoaderModMetadata) metadata, requiresRemap, nestedMods);
 			ret.setData(is.getBuffer());
 
 			return ret;

@@ -1,4 +1,4 @@
-package ml.darubyminer360.cloud.loading;
+package ml.cloudmc.cloudloader.loading;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,7 +37,6 @@ import net.fabricmc.loader.impl.util.UrlConversionException;
 import net.fabricmc.loader.impl.util.UrlUtil;
 import net.fabricmc.loader.impl.util.log.Log;
 import net.fabricmc.loader.impl.util.log.LogCategory;
-import org.spongepowered.asm.service.modlauncher.MixinServiceModLauncher;
 
 final class FMLClassDelegate<T extends ClassLoader & FMLClassDelegate.ClassLoaderAccess> implements FMLClassLoaderInterface {
     private static final boolean LOG_CLASS_LOAD = System.getProperty(SystemProperties.DEBUG_LOG_CLASS_LOAD) != null;

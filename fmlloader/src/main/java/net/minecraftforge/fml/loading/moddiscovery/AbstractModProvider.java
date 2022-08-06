@@ -32,9 +32,9 @@ import java.util.jar.Manifest;
 public abstract class AbstractModProvider implements IModProvider
 {
     private static final   Logger LOGGER    = LogUtils.getLogger();
-    protected static final String FABRIC_MOD_JSON = "fabric.mod.json";
-    protected static final String MODS_TOML = "META-INF/mods.toml";
-    protected static final String MANIFEST = "META-INF/MANIFEST.MF";
+    public static final String FABRIC_MOD_JSON = "fabric.mod.json";
+    public static final String MODS_TOML = "META-INF/mods.toml";
+    public static final String MANIFEST = "META-INF/MANIFEST.MF";
 
     protected IModLocator.ModFileOrException createMod(Path... path) {
         var mjm = new ModJarMetadata();

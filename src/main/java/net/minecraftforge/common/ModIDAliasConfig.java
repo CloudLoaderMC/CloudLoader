@@ -5,7 +5,7 @@
 
 package net.minecraftforge.common;
 
-import ml.darubyminer360.cloud.loading.LoadingConstants;
+import ml.cloudmc.cloudloader.loading.LoadingConstants;
 import net.minecraftforge.common.ForgeConfigSpec.ConfigValue;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.event.config.ModConfigEvent;

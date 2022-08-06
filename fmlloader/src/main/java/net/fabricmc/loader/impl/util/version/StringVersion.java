@@ -16,7 +16,7 @@
 
 package net.fabricmc.loader.impl.util.version;
 
-import ml.darubyminer360.cloud.util.Utils;
+import ml.cloudmc.cloudloader.util.Utils;
 import net.fabricmc.loader.api.Version;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.apache.maven.artifact.versioning.DefaultArtifactVersion;

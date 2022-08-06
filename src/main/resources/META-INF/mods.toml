@@ -19,8 +19,8 @@ description='''
 modId="cloudloader"
 # We use the global Cloud version
 # TODO: Automate this
-#version="${global.cloudVersion}"
-version="0.1.0"
+version="${global.cloudVersion}"
+#version="0.1.0"
 updateJSONURL="https://cloudmc.ml/files/promotions_slim.json"
 displayName="Cloud"
 credits="Anyone who has contributed on Github and supports our development"

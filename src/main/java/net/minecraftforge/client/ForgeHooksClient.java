@@ -16,7 +16,7 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.datafixers.util.Either;
 import com.mojang.math.Matrix4f;
 import com.mojang.math.Vector3f;
-import ml.darubyminer360.cloudloader.CloudVersion;
+import ml.cloudmc.cloudloader.CloudVersion;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Camera;
 import net.minecraft.client.KeyMapping;

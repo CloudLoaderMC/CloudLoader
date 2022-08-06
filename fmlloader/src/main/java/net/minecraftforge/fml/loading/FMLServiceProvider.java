@@ -31,7 +31,9 @@ public class FMLServiceProvider implements ITransformationService
     private ArgumentAcceptingOptionSpec<String> modsOption;
     private ArgumentAcceptingOptionSpec<String> modListsOption;
     private ArgumentAcceptingOptionSpec<String> mavenRootsOption;
+    private ArgumentAcceptingOptionSpec<String> cloudOption;
     private ArgumentAcceptingOptionSpec<String> forgeOption;
+    private ArgumentAcceptingOptionSpec<String> fabricOption;
     private ArgumentAcceptingOptionSpec<String> mcOption;
     private ArgumentAcceptingOptionSpec<String> forgeGroupOption;
     private ArgumentAcceptingOptionSpec<String> mcpOption;
@@ -39,7 +41,9 @@ public class FMLServiceProvider implements ITransformationService
     private List<String> modsArgumentList;
     private List<String> modListsArgumentList;
     private List<String> mavenRootsArgumentList;
+    private String targetCloudVersion;
     private String targetForgeVersion;
+    private String targetFabricVersion;
     private String targetMcVersion;
     private String targetMcpVersion;
     private String targetMcpMappings;
@@ -70,8 +74,9 @@ public class FMLServiceProvider implements ITransformationService
         arguments.put("modLists", modListsArgumentList);
         arguments.put("mods", modsArgumentList);
         arguments.put("mavenRoots", mavenRootsArgumentList);
-        // TODO: Add Cloud here
+        arguments.put("cloudVersion", targetCloudVersion);
         arguments.put("forgeVersion", targetForgeVersion);
+        arguments.put("fabricVersion", targetFabricVersion);
         arguments.put("forgeGroup", targetForgeGroup);
         arguments.put("mcVersion", targetMcVersion);
         arguments.put("mcpVersion", targetMcpVersion);
@@ -105,8 +110,9 @@ public class FMLServiceProvider implements ITransformationService
     @Override
     public void arguments(BiFunction<String, String, OptionSpecBuilder> argumentBuilder)
     {
-        // TODO: Add Cloud here
+        cloudOption = argumentBuilder.apply("cloudVersion", "Cloud Version number").withRequiredArg().ofType(String.class).required();
         forgeOption = argumentBuilder.apply("forgeVersion", "Forge Version number").withRequiredArg().ofType(String.class).required();
+        fabricOption = argumentBuilder.apply("fabricVersion", "Fabric Version number").withRequiredArg().ofType(String.class).required();
         forgeGroupOption = argumentBuilder.apply("forgeGroup", "Forge Group (for testing)").withRequiredArg().ofType(String.class).defaultsTo("net.minecraftforge");
         mcOption = argumentBuilder.apply("mcVersion", "Minecraft Version number").withRequiredArg().ofType(String.class).required();
         mcpOption = argumentBuilder.apply("mcpVersion", "MCP Version number").withRequiredArg().ofType(String.class).required();
@@ -122,6 +128,7 @@ public class FMLServiceProvider implements ITransformationService
         modsArgumentList = option.values(modsOption);
         modListsArgumentList = option.values(modListsOption);
         mavenRootsArgumentList = option.values(mavenRootsOption);
+        targetCloudVersion = option.value(cloudOption);
         targetForgeVersion = option.value(forgeOption);
         targetForgeGroup = option.value(forgeGroupOption);
         targetMcVersion = option.value(mcOption);

@@ -155,6 +155,14 @@ jar.doFirst {
     }
 }
 
+processResources {
+    inputs.property "version", FABRIC_VERSION
+
+    filesMatching("fabric.mod.json") {
+        expand "version": FABRIC_VERSION
+    }
+}
+
 /*java {
     withSourcesJar()
 }

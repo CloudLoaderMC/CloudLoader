@@ -1,4 +1,4 @@
-package ml.darubyminer360.cloudloader;
+package ml.cloudmc.cloudloader;
 
 import net.minecraftforge.fml.ModList;
 import net.minecraftforge.fml.VersionChecker;
@@ -15,7 +15,7 @@ public class CloudVersion {
     private static final String cloudVersion;
 
     static {
-        // TODO: Automate this?
+        // TODO: Automate this
         cloudVersion = "0.1.0";
         LOGGER.debug(CORE, "Found Cloud version {}", cloudVersion);
     }

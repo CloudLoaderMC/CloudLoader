@@ -22,12 +22,9 @@ import java.util.Optional;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import ml.darubyminer360.cloud.util.Utils;
 import net.fabricmc.loader.api.SemanticVersion;
 import net.fabricmc.loader.api.Version;
 import net.fabricmc.loader.api.VersionParsingException;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.apache.maven.artifact.versioning.DefaultArtifactVersion;
 
 /**
  * Parser for a superset of the semantic version format described at <a href="https://semver.org">semver.org</a>.

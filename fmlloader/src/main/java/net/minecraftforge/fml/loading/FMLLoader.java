@@ -11,7 +11,7 @@ import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.*;
 import cpw.mods.modlauncher.serviceapi.ILaunchPluginService;
 import cpw.mods.modlauncher.util.ServiceLoaderUtils;
-import ml.darubyminer360.cloud.loading.FMLClassLoaderInterface;
+import ml.cloudmc.cloudloader.loading.FMLClassLoaderInterface;
 import net.fabricmc.api.EnvType;
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
@@ -90,9 +90,10 @@ public class FMLLoader extends FabricLauncherBase {
         this.envType = envType;
     }
 
-    static void onInitialLoad(ArgumentHandler argumentHandler, IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException
-    {
+    static void onInitialLoad(ArgumentHandler argumentHandler, IEnvironment environment, Set<String> otherServices) throws IncompatibleEnvironmentException {
         FMLLoader loader = new FMLLoader(argumentHandler.getLaunchTarget().contains("client") ? EnvType.CLIENT : EnvType.SERVER);
+        setupSystemProperties(argumentHandler, loader);
+
         final String version = LauncherVersion.getVersion();
         LOGGER.debug(CORE,"FML {} loading", version);
         final Package modLauncherPackage = ITransformationService.class.getPackage();
@@ -222,6 +223,38 @@ public class FMLLoader extends FabricLauncherBase {
         } catch (RuntimeException e) {
             throw new FormattedException("A mod crashed on startup!", e);
         }
+    }
+
+    static void setupSystemProperties(ArgumentHandler argumentHandler, FMLLoader loader) {
+        // Set all the system properties for compatibility
+//              SystemProperties.DEVELOPMENT
+//              SystemProperties.SIDE
+//        SystemProperties.SKIP_MC_PROVIDER
+//        SystemProperties.GAME_JAR_PATH
+//        SystemProperties.GAME_JAR_PATH_CLIENT
+//        SystemProperties.GAME_JAR_PATH_SERVER
+//              SystemProperties.GAME_VERSION
+//        SystemProperties.LOG_FILE
+//        SystemProperties.LOG_LEVEL
+//        SystemProperties.ADD_MODS
+//        SystemProperties.REMAP_CLASSPATH_FILE
+//        SystemProperties.PATH_GROUPS
+//        SystemProperties.SYSTEM_LIBRARIES
+//        SystemProperties.DEBUG_THROW_DIRECTLY
+//        SystemProperties.DEBUG_LOG_LIB_CLASSIFICATION
+//        SystemProperties.DEBUG_LOG_CLASS_LOAD
+//        SystemProperties.DEBUG_LOG_CLASS_LOAD_ERRORS
+//        SystemProperties.DEBUG_LOG_TRANSFORM_ERRORS
+//        SystemProperties.DEBUG_DISABLE_CLASS_PATH_ISOLATION
+//        SystemProperties.DEBUG_DISABLE_MOD_SHUFFLE
+//        SystemProperties.DEBUG_LOAD_LATE
+//        SystemProperties.DEBUG_DISCOVERY_TIMEOUT
+//        SystemProperties.DEBUG_RESOLUTION_TIMEOUT
+//        SystemProperties.DEBUG_REPLACE_VERSION
+//        "fabric.loader.useCompatibilityClassLoader"
+        System.setProperty(SystemProperties.DEVELOPMENT, System.getProperty(SystemProperties.DEVELOPMENT, String.valueOf(((String) argumentHandler.getOptionSet().valueOf("launchTarget")).contains("dev"))));
+        System.setProperty(SystemProperties.SIDE, System.getProperty(SystemProperties.SIDE, loader.envType.name().toLowerCase()));
+        System.setProperty(SystemProperties.GAME_VERSION, System.getProperty(SystemProperties.GAME_VERSION, (String) argumentHandler.getOptionSet().valueOf("fml.mcVersion")));
     }
 
     static void setupLaunchHandler(final IEnvironment environment, final Map<String, Object> arguments)

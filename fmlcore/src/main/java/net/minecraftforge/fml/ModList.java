@@ -5,7 +5,7 @@
 
 package net.minecraftforge.fml;
 
-import ml.darubyminer360.cloud.loading.LoadingConstants;
+import ml.cloudmc.cloudloader.loading.LoadingConstants;
 import net.minecraftforge.eventbus.api.Event;
 import net.minecraftforge.fml.event.IModBusEvent;
 import net.minecraftforge.forgespi.language.IModFileInfo;

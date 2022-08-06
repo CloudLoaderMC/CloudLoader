@@ -1,4 +1,4 @@
-package ml.darubyminer360.cloud.loading;
+package ml.cloudmc.cloudloader.loading;
 
 import java.net.URL;
 import java.net.URLClassLoader;

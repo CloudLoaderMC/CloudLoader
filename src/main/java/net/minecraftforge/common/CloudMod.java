@@ -1,6 +1,6 @@
 package net.minecraftforge.common;
 
-import ml.darubyminer360.cloudloader.CloudVersion;
+import ml.cloudmc.cloudloader.CloudVersion;
 import net.fabricmc.loader.impl.FabricLoaderImpl;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.*;

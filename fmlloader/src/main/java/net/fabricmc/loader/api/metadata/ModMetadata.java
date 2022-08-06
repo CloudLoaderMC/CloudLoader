@@ -21,12 +21,13 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import ml.cloudmc.cloudspi.BasicModInfo;
 import net.fabricmc.loader.api.Version;
 
 /**
  * The metadata of a mod.
  */
-public interface ModMetadata {
+public interface ModMetadata extends BasicModInfo {
 	/**
 	 * Returns the type of the mod.
 	 *

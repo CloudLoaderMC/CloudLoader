@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+import net.minecraftforge.fml.loading.FMLPaths;
 import org.objectweb.asm.Opcodes;
 
 import net.fabricmc.accesswidener.AccessWidener;
@@ -69,6 +70,7 @@ public final class FabricLoaderImpl extends net.fabricmc.loader.FabricLoader {
 
 	public static final int ASM_VERSION = Opcodes.ASM9;
 
+	// TODO: Automate this
 	public static final String VERSION = "0.14.8";
 	public static final String MOD_ID = "fabricloader";
 
@@ -203,7 +205,7 @@ public final class FabricLoaderImpl extends net.fabricmc.loader.FabricLoader {
 
 		ModDiscoverer discoverer = new ModDiscoverer(versionOverrides, depOverrides);
 		discoverer.addCandidateFinder(new ClasspathModCandidateFinder());
-		discoverer.addCandidateFinder(new DirectoryModCandidateFinder(gameDir.resolve("mods"), remapRegularMods));
+		discoverer.addCandidateFinder(new DirectoryModCandidateFinder(gameDir.resolve(FMLPaths.MODSDIR.relative()), remapRegularMods));
 		discoverer.addCandidateFinder(new ArgumentModCandidateFinder(remapRegularMods));
 
 		Map<String, Set<ModCandidate>> envDisabledMods = new HashMap<>();
@@ -428,17 +430,19 @@ public final class FabricLoaderImpl extends net.fabricmc.loader.FabricLoader {
 		AccessWidenerReader accessWidenerReader = new AccessWidenerReader(accessWidener);
 
 		for (net.fabricmc.loader.api.ModContainer modContainer : getAllMods()) {
-			LoaderModMetadata modMetadata = (LoaderModMetadata) modContainer.getMetadata();
-			String accessWidener = modMetadata.getAccessWidener();
-			if (accessWidener == null) continue;
+			if (modContainer.getMetadata() instanceof LoaderModMetadata modMetadata) {
+				String accessWidener = modMetadata.getAccessWidener();
+				if (accessWidener == null) continue;
 
-			Path path = modContainer.findPath(accessWidener).orElse(null);
-			if (path == null) throw new RuntimeException(String.format("Missing accessWidener file %s from mod %s", accessWidener, modContainer.getMetadata().getId()));
+				Path path = modContainer.findPath(accessWidener).orElse(null);
+				if (path == null)
+					throw new RuntimeException(String.format("Missing accessWidener file %s from mod %s", accessWidener, modContainer.getMetadata().getId()));
 
-			try (BufferedReader reader = Files.newBufferedReader(path)) {
-				accessWidenerReader.read(reader, getMappingResolver().getCurrentRuntimeNamespace());
-			} catch (Exception e) {
-				throw new RuntimeException("Failed to read accessWidener file from mod " + modMetadata.getId(), e);
+				try (BufferedReader reader = Files.newBufferedReader(path)) {
+					accessWidenerReader.read(reader, getMappingResolver().getCurrentRuntimeNamespace());
+				} catch (Exception e) {
+					throw new RuntimeException("Failed to read accessWidener file from mod " + modMetadata.getId(), e);
+				}
 			}
 		}
 	}

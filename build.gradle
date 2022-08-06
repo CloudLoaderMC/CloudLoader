@@ -16,8 +16,20 @@ import org.gradle.plugins.ide.eclipse.model.SourceFolder
 
 import ml.darubyminer360.gradleutils.GradleUtils
 
+/*buildscript {
+    repositories {
+        mavenLocal()
+
+        dependencies {
+            classpath 'ml.cloudmc.gradle.patcher:ml.cloudmc.gradle.patcher.gradle.plugin:5.1.53'
+            classpath 'ml.cloudmc.gradle.mcp:ml.cloudmc.gradle.mcp.gradle.plugin:5.1.53'
+//            classpath 'net.fabricmc:fabric-loom:5.1.53'
+        }
+    }
+}*/
+
 plugins {
-    id 'fabric-loom' version '0.11-SNAPSHOT' apply false
+//    id 'fabric-loom' version '0.12-SNAPSHOT' apply false
     id "me.modmuss50.remotesign" version "0.2.4"
 
     id 'org.cadixdev.licenser' version '0.6.1'
@@ -44,11 +56,11 @@ ext {
     MAPPING_VERSION = '1.19'
     MC_VERSION = '1.19'
     MCP_VERSION = '20220607.102129'
-    SPI_VERSION = '6.5.3'
+    SPI_VERSION = '6.5.6'
     ACCESSTRANSFORMERS_VERSION = '8.0.9'
     COREMODS_VERSION = '5.4.2'
     EVENTBUS_VERSION = '6.0.3'
-    MODLAUNCHER_VERSION = '10.0.12'
+    MODLAUNCHER_VERSION = '10.0.13'
     SECUREJARHANDLER_VERSION = '2.1.4'
     BOOTSTRAPLAUNCHER_VERSION = '1.1.2'
     ASM_VERSION = '9.3'
@@ -79,6 +91,8 @@ ext {
 //    FORGE_VERSION = VERSION.substring(MC_VERSION.length() + 1)
     // TODO: Automate this?
     FORGE_VERSION = "41.1.0"
+    // TODO: Automate this?
+    FABRIC_VERSION = "0.14.8"
 
     BINPATCH_TOOL = 'net.minecraftforge:binarypatcher:1.1.1:fatjar'
     INSTALLER_TOOLS = 'net.minecraftforge:installertools:1.3.0'
@@ -445,6 +459,7 @@ def sharedFmlonlyForge = { Project prj ->
         run.args '--gameDir', '.'
         run.args '--fml.cloudVersion', CLOUD_VERSION
         run.args '--fml.forgeVersion', FORGE_VERSION
+        run.args '--fml.fabricVersion', FABRIC_VERSION
         run.args '--fml.mcVersion', MC_VERSION
         run.args '--fml.forgeGroup', prj.group
         run.args '--fml.mcpVersion', MCP_VERSION
@@ -515,6 +530,7 @@ def sharedFmlonlyForge = { Project prj ->
             MAVEN_PATH:    prj.ext.MAVEN_PATH.toString(),
             CLOUD_VERSION: CLOUD_VERSION,
             FORGE_VERSION: FORGE_VERSION,
+            FABRIC_VERSION: FABRIC_VERSION,
             MC_VERSION:    MC_VERSION,
             MCP_VERSION:   MCP_VERSION,
             FORGE_GROUP:   prj.group,
@@ -654,6 +670,7 @@ project(':fmlonly') {
                     game: ['--launchTarget', 'fmlclient',
                            '--fml.cloudVersion', CLOUD_VERSION,
                            '--fml.forgeVersion', FORGE_VERSION,
+                           '--fml.fabricVersion', FABRIC_VERSION,
                            '--fml.mcVersion', MC_VERSION,
                            '--fml.forgeGroup', project.group,
                            '--fml.mcpVersion', MCP_VERSION],
@@ -891,6 +908,7 @@ project(':forge') {
     evaluationDependsOn(':clean')
     apply plugin: 'java-library'
     apply plugin: 'net.minecraftforge.gradle.patcher'
+//    apply plugin: 'fabric-loom'
     apply plugin: 'org.cadixdev.licenser'
 
     sourceSets {
@@ -1287,6 +1305,7 @@ project(':forge') {
                     game: ['--launchTarget', 'forgeclient',
                            '--fml.cloudVersion', CLOUD_VERSION,
                            '--fml.forgeVersion', FORGE_VERSION,
+                           '--fml.fabricVersion', FABRIC_VERSION,
                            '--fml.mcVersion', MC_VERSION,
                            '--fml.forgeGroup', project.group,
                            '--fml.mcpVersion', MCP_VERSION],
@@ -1577,6 +1596,7 @@ project(':forge') {
             filter(ReplaceTokens, tokens: [
                 CLOUD_VERSION: project.version,
                 FORGE_VERSION: MC_VERSION + '-' + FORGE_VERSION,
+                FABRIC_VERSION: FABRIC_VERSION,
                 FORGE_GROUP: project.group,
                 FORGE_NAME: project.name,
                 MC_VERSION: MC_VERSION,

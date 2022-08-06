@@ -1,4 +1,4 @@
-package ml.darubyminer360.cloud.util;
+package ml.cloudmc.cloudloader.util;
 
 import java.util.regex.Pattern;
 
