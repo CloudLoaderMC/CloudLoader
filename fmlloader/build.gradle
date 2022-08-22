@@ -10,6 +10,7 @@ apply plugin: 'java-library'
 apply plugin: 'eclipse'
 apply plugin: 'jacoco'
 apply plugin: 'org.javamodularity.moduleplugin'
+apply plugin: 'fabric-loom'
 
 repositories {
     mavenLocal()
@@ -75,6 +76,10 @@ dependencyUpdates.rejectVersionIf { isNonStable(it.candidate.version) }
 configurations.forEach{ it.transitive = false }
 
 dependencies {
+    minecraft("com.mojang:minecraft:${MC_VERSION}")
+    mappings loom.officialMojangMappings()
+//    mappings channel: 'official', version: '1.19'
+
     compileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
 
     api("org.ow2.asm:asm:${ASM_VERSION}")
@@ -110,7 +115,7 @@ dependencies {
     api "net.minecraftforge:JarJar:${JARJAR_VERSION}"
 
     implementation("net.sf.jopt-simple:jopt-simple:${JOPT_SIMPLE_VERSION}")
-    implementation("cpw.mods:securejarhandler:${SECUREJARHANDLER_VERSION}")
+    implementation("ml.cloudmc:SecureJarHandler:${SECUREJARHANDLER_VERSION}")
     implementation("ml.cloudmc:AccessTransformers:${ACCESSTRANSFORMERS_VERSION}")
     implementation("net.minecrell:terminalconsoleappender:${TERMINALCONSOLEAPPENDER_VERSION}")
     // implementation("org.jline:jline:${JLINE_VERSION}")
@@ -119,7 +124,7 @@ dependencies {
     annotationProcessor("org.apache.logging.log4j:log4j-core:${LOG4J_VERSION}")
 
     testCompileOnly("org.jetbrains:annotations:${JETBRAINS_ANNOTATIONS_VERSION}")
-    testRuntimeOnly("cpw.mods:bootstraplauncher:${BOOTSTRAPLAUNCHER_VERSION}")
+    testRuntimeOnly("ml.cloudmc:BootstrapLauncher:${BOOTSTRAPLAUNCHER_VERSION}")
 
     // Unit testing for mod metadata
     testImplementation('org.junit.jupiter:junit-jupiter:5.8.2')

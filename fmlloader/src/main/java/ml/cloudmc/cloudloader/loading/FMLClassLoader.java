@@ -14,10 +14,13 @@ import net.fabricmc.loader.impl.game.GameProvider;
 import net.fabricmc.loader.impl.launch.knot.DummyClassLoader;
 
 // class name referenced by string constant in net.fabricmc.loader.impl.util.LoaderUtil.verifyNotInTargetCl
+//final class FMLClassLoader extends SecureClassLoader implements FMLClassDelegate.ClassLoaderAccess {
 final class FMLClassLoader extends SecureClassLoader implements FMLClassDelegate.ClassLoaderAccess {
     private static final class DynamicURLClassLoader extends URLClassLoader {
-        private DynamicURLClassLoader(URL[] urls) {
-            super(urls, new DummyClassLoader());
+//        private DynamicURLClassLoader(URL[] urls) {
+        private DynamicURLClassLoader(URL[] urls, ClassLoader parent) {
+//            super(urls, new DummyClassLoader());
+            super(urls, parent);
         }
 
         @Override
@@ -35,9 +38,11 @@ final class FMLClassLoader extends SecureClassLoader implements FMLClassDelegate
     private final FMLClassDelegate<FMLClassLoader> delegate;
 
     FMLClassLoader(boolean isDevelopment, EnvType envType, GameProvider provider) {
-        super(new FMLClassLoader.DynamicURLClassLoader(new URL[0]));
+//        super(new FMLClassLoader.DynamicURLClassLoader(new URL[0], FMLClassLoader.class.getClassLoader()));
+        super(FMLClassLoader.class.getClassLoader());
         this.originalLoader = getClass().getClassLoader();
-        this.urlLoader = (FMLClassLoader.DynamicURLClassLoader) getParent();
+//        this.urlLoader = (FMLClassLoader.DynamicURLClassLoader) getParent();
+        this.urlLoader = new FMLClassLoader.DynamicURLClassLoader(new URL[0], FMLClassLoader.class.getClassLoader());
         this.delegate = new FMLClassDelegate<>(isDevelopment, envType, this, originalLoader, provider);
     }
 
@@ -56,6 +61,7 @@ final class FMLClassLoader extends SecureClassLoader implements FMLClassDelegate
         }
 
         return url;
+//        return getParent().getResource(name);
     }
 
     @Override
@@ -63,6 +69,7 @@ final class FMLClassLoader extends SecureClassLoader implements FMLClassDelegate
         Objects.requireNonNull(name);
 
         return urlLoader.findResource(name);
+//        return getParent().findResource(name);
     }
 
     @Override

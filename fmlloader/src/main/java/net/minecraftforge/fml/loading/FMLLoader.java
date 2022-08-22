@@ -6,6 +6,7 @@
 package net.minecraftforge.fml.loading;
 
 import com.mojang.logging.LogUtils;
+import cpw.mods.cl.ModuleClassLoader;
 import cpw.mods.modlauncher.ArgumentHandler;
 import cpw.mods.modlauncher.Launcher;
 import cpw.mods.modlauncher.api.*;
@@ -180,6 +181,11 @@ public class FMLLoader extends FabricLauncherBase {
         boolean useCompatibility = loader.provider.requiresUrlClassLoader() || Boolean.parseBoolean(System.getProperty("fabric.loader.useCompatibilityClassLoader", "false"));
         loader.classLoader = FMLClassLoaderInterface.create(useCompatibility, loader.isDevelopment(), loader.envType, loader.provider);
         ClassLoader cl = loader.classLoader.getClassLoader();
+//        ClassLoader cl = environment.getClass().getClassLoader();
+
+        if (environment.getClass().getClassLoader() instanceof ModuleClassLoader) {
+            ((ModuleClassLoader) environment.getClass().getClassLoader()).parentLoaders.put(loader.classLoader.getClass().getName(), loader.classLoader.getClassLoader());
+        }
 
         loader.provider.initialize(loader);
 
@@ -192,12 +198,17 @@ public class FMLLoader extends FabricLauncherBase {
 
         FabricLoaderImpl.INSTANCE.loadAccessWideners();
 
+        LOGGER.info("A");
         FabricMixinBootstrap.init(fabricLoader.getEnvironmentType(), fabricLoader);
+        LOGGER.info("B");
         FabricLauncherBase.finishMixinBootstrapping();
 
+        LOGGER.info("C");
         loader.classLoader.initializeTransformers();
+        LOGGER.info("D");
 
         loader.provider.unlockClassPath(loader);
+        LOGGER.info("E");
         loader.unlocked = true;
 
 
@@ -216,7 +227,6 @@ public class FMLLoader extends FabricLauncherBase {
             LOGGER.error(CORE, "Failed to load NightConfig");
             throw new IncompatibleEnvironmentException("Missing NightConfig");
         }
-
 
         try {
             EntrypointUtils.invoke("preLaunch", PreLaunchEntrypoint.class, PreLaunchEntrypoint::onPreLaunch);
@@ -237,7 +247,7 @@ public class FMLLoader extends FabricLauncherBase {
 //        SystemProperties.LOG_FILE
 //        SystemProperties.LOG_LEVEL
 //        SystemProperties.ADD_MODS
-//        SystemProperties.REMAP_CLASSPATH_FILE
+//              SystemProperties.REMAP_CLASSPATH_FILE
 //        SystemProperties.PATH_GROUPS
 //        SystemProperties.SYSTEM_LIBRARIES
 //        SystemProperties.DEBUG_THROW_DIRECTLY
@@ -462,6 +472,7 @@ public class FMLLoader extends FabricLauncherBase {
     public String getTargetNamespace() {
         // TODO: Won't work outside of Yarn
         return isDevelopment ? "named" : "intermediary";
+//        return "intermediary";
     }
 
     @Override

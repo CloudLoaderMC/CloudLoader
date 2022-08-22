@@ -252,56 +252,59 @@ public final class ModDiscoverer {
 				}
 			} else { // regular classes-dir or jar
 				try {
-					if (paths.size() != 1 || Files.isDirectory(paths.get(0))) {
-						return computeDir();
-					} else {
-						return computeJarFile();
+					for (Path path : paths) {
+						final ModCandidate candidate;
+
+						if (Files.isDirectory(path)) {
+							candidate = computeDir(path);
+						} else {
+							candidate = computeJarFile(path);
+						}
+
+						if (candidate != null) {
+							return candidate;
+						}
 					}
 				} catch (ParseMetadataException e) { // already contains all context
 					throw ExceptionUtil.wrap(e);
 				} catch (Throwable t) {
 					throw new RuntimeException(String.format("Error analyzing %s: %s", paths, t), t);
 				}
+
+				return null;
 			}
 		}
 
-		private ModCandidate computeDir() throws IOException, ParseMetadataException {
-			for (Path path : paths) {
-                if (Files.exists(path.resolve("META-INF/mods.toml"))) {
-                    Path modJson = path.resolve("META-INF/mods.toml");
-                    
-                    LoaderModMetadata metadata;
-                    
-                    try (InputStream is = Files.newInputStream(modJson)) {
-                        // FIXME: Change this
-                        metadata = parseMetadata(is, path.toString());
-                    }
-                    
-                    return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
-                }
-                else if (Files.exists(path.resolve("fabric.mod.json"))) {
-                    Path modJson = path.resolve("fabric.mod.json");
-                    
-                    LoaderModMetadata metadata;
-                    
-                    try (InputStream is = Files.newInputStream(modJson)) {
-                        metadata = parseMetadata(is, path.toString());
-                    }
-                    
-                    return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
-                }
-                else {
-                    continue;
-                }
+		private ModCandidate computeDir(Path path) throws IOException, ParseMetadataException {
+			if (Files.exists(path.resolve("META-INF/mods.toml"))) {
+				Path modJson = path.resolve("META-INF/mods.toml");
+
+				LoaderModMetadata metadata;
+
+				try (InputStream is = Files.newInputStream(modJson)) {
+					// FIXME: Change this
+					metadata = parseMetadata(is, path.toString());
+				}
+
+				return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
+			}
+			else if (Files.exists(path.resolve("fabric.mod.json"))) {
+				Path modJson = path.resolve("fabric.mod.json");
+
+				LoaderModMetadata metadata;
+
+				try (InputStream is = Files.newInputStream(modJson)) {
+					metadata = parseMetadata(is, path.toString());
+				}
+
+				return ModCandidate.createPlain(paths, metadata, requiresRemap, Collections.emptyList());
 			}
 
 			return null;
 		}
 
-		private ModCandidate computeJarFile() throws IOException, ParseMetadataException {
-			assert paths.size() == 1;
-
-			try (ZipFile zf = new ZipFile(paths.get(0).toFile())) {
+		private ModCandidate computeJarFile(Path path) throws IOException, ParseMetadataException {
+			try (ZipFile zf = new ZipFile(path.toFile())) {
 				// FIXME: Add if statements for META-INF/mods.toml and fabric.mod.json, and put the below code in both of them
                 ZipEntry entry = zf.getEntry("fabric.mod.json");
 				if (entry == null) return null;

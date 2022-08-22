@@ -130,6 +130,7 @@ public class FMLServiceProvider implements ITransformationService
         mavenRootsArgumentList = option.values(mavenRootsOption);
         targetCloudVersion = option.value(cloudOption);
         targetForgeVersion = option.value(forgeOption);
+        targetFabricVersion = option.value(fabricOption);
         targetForgeGroup = option.value(forgeGroupOption);
         targetMcVersion = option.value(mcOption);
         targetMcpVersion = option.value(mcpOption);

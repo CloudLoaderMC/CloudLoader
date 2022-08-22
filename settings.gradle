@@ -1,17 +1,17 @@
 pluginManagement {
     repositories {
-//        mavenLocal()
-        mavenCentral()
-        gradlePluginPortal()
-        maven {
-            name = 'Cloud'
-            url = 'https://maven.cloudmc.ml/releases/'
-        }
         maven { url = 'https://maven.minecraftforge.net/' }
         maven {
-            url = "https://maven.fabricmc.net"
+            name = 'Cloud'
+            url = 'https://maven.cloudmc.ml/releases'
+        }
+        maven {
+            url = "https://maven.fabricmc.net/"
             name = "FabricMC"
         }
+        gradlePluginPortal()
+        mavenCentral()
+        mavenLocal()
     }
 }
 
@@ -33,4 +33,3 @@ project(":mcp").projectDir = file("projects/mcp")
 project(":clean").projectDir = file("projects/clean")
 project(":fmlonly").projectDir = file("projects/fmlonly")
 project(":forge").projectDir = file("projects/forge")
-
