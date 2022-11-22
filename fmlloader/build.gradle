@@ -10,7 +10,7 @@ apply plugin: 'java-library'
 apply plugin: 'eclipse'
 apply plugin: 'jacoco'
 apply plugin: 'org.javamodularity.moduleplugin'
-apply plugin: 'fabric-loom'
+apply plugin: 'CloudLoom'
 
 repositories {
     mavenLocal()

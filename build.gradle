@@ -1,8 +1,4 @@
-import groovy.json.JsonBuilder
-
 import java.nio.file.Files
-import java.util.Date
-import java.util.LinkedHashMap
 import net.minecraftforge.forge.tasks.*
 import static net.minecraftforge.forge.tasks.Util.*
 import net.minecraftforge.gradle.common.tasks.ApplyBinPatches
@@ -34,16 +30,13 @@ buildscript {
         dependencies {
 //            classpath 'ml.cloudmc.gradle.patcher:ml.cloudmc.gradle.patcher.gradle.plugin:5.1.53'
 //            classpath 'ml.cloudmc.gradle.mcp:ml.cloudmc.gradle.mcp.gradle.plugin:5.1.53'
-            classpath 'net.fabricmc:fabric-loom:0.12.local'
+//            classpath 'ml.cloudmc:CloudLoom:0.12.local'
         }
     }
 }
 
 plugins {
-//    id 'fabric-loom' version '0.12-SNAPSHOT' apply false
-//    id 'fabric-loom' version '0.12-SNAPSHOT'
-//    id 'dev.architectury.loom' version '0.12-SNAPSHOT' apply false
-//    id 'dev.architectury.loom' version '0.12.0-SNAPSHOT'
+    id 'CloudLoom' version '0.12.1' apply false
     id "me.modmuss50.remotesign" version "0.2.4"
 
     id 'org.cadixdev.licenser' version '0.6.1'
